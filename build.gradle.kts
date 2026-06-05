@@ -1,7 +1,7 @@
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 plugins {
-    id("org.jetbrains.kotlin.jvm")
+    java
     id("org.jetbrains.intellij.platform")
     id("org.jetbrains.changelog")
 }
@@ -13,5 +13,12 @@ dependencies {
     intellijPlatform {
         intellijIdea("2025.2.6.2")
         testFramework(TestFrameworkType.Platform)
+    }
+}
+
+tasks {
+    withType<JavaCompile> {
+        sourceCompatibility = "17"
+        targetCompatibility = "17"
     }
 }
