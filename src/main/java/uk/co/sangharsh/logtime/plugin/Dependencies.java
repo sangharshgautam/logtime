@@ -249,8 +249,8 @@ public class Dependencies {
 
         URL downloadUrl = null;
         try {
-            downloadUrl = new URL(url);
-        } catch (MalformedURLException e) {
+            downloadUrl = new URI(url).toURL();
+        } catch (URISyntaxException | MalformedURLException e) {
             LogTime.log.error("DownloadFile(" + url + ") failed to init new URL");
             LogTime.log.error(e);
             return false;
@@ -313,8 +313,8 @@ public class Dependencies {
 
         URL downloadUrl = null;
         try {
-            downloadUrl = new URL(url);
-        } catch (MalformedURLException e) {
+            downloadUrl = new URI(url).toURL();
+        } catch (URISyntaxException | MalformedURLException e) {
             LogTime.log.error("getUrlAsString(" + url + ") failed to init new URL");
             LogTime.log.error(e);
             return null;
