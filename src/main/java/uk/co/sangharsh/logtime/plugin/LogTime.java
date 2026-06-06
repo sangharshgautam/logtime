@@ -9,14 +9,12 @@ Website:     https://logtime.com/
 package uk.co.sangharsh.logtime.plugin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.intellij.AppTopics;
 import com.intellij.util.net.HttpConfigurable;
 import uk.co.sangharsh.logtime.plugin.listener.*;
 import uk.co.sangharsh.logtime.plugin.service.JiraDurationUtils;
 import uk.co.sangharsh.logtime.plugin.service.JiraService;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.ide.DataManager;
-import com.intellij.ide.plugins.PluginManager;
 import com.intellij.ide.plugins.PluginManagerCore;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
@@ -25,10 +23,12 @@ import com.intellij.openapi.application.ApplicationInfo;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ApplicationNamesInfo;
 import com.intellij.openapi.components.ApplicationComponent;
+import java.math.RoundingMode;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.*;
 import com.intellij.openapi.extensions.PluginId;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.fileEditor.FileDocumentManagerListener;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.project.Project;
@@ -86,13 +86,7 @@ public class LogTime implements ApplicationComponent {
 
     public void initComponent() {
         PluginId pluginId = PluginId.getId("uk.co.sangharsh.logtime.plugin");
-        try {
-            // support older IDE versions with deprecated PluginManager
-            VERSION = PluginManager.getPlugin(pluginId).getVersion();
-        } catch (Exception e) {
-            // use PluginManagerCore if PluginManager deprecated
-            VERSION = PluginManagerCore.getPlugin(pluginId).getVersion();
-        }
+        VERSION = PluginManagerCore.getPlugin(pluginId).getVersion();
         log.info("Initializing LogTime plugin v" + VERSION + " (https://logtime.com/)");
         //System.out.println("Initializing LogTime plugin v" + VERSION + " (https://logtime.com/)");
 
@@ -143,9 +137,10 @@ public class LogTime implements ApplicationComponent {
             public void run() {
                 Disposable disposable = Disposer.newDisposable("LogTimeListener");
                 MessageBusConnection connection = ApplicationManager.getApplication().getMessageBus().connect();
+                LogTime.connection = connection;
 
-                // save file
-                connection.subscribe(AppTopics.FILE_DOCUMENT_SYNC, new CustomSaveListener());
+                // save file - use FileDocumentManagerListener.TOPIC instead of deprecated AppTopics.FILE_DOCUMENT_SYNC
+                connection.subscribe(FileDocumentManagerListener.TOPIC, new CustomSaveListener());
 
                 // edit document
                 EditorFactory.getInstance().getEventMulticaster().addDocumentListener(new CustomDocumentListener(), disposable);
@@ -235,7 +230,7 @@ public class LogTime implements ApplicationComponent {
     }
 
     public static BigDecimal getCurrentTimestamp() {
-        return new BigDecimal(String.valueOf(System.currentTimeMillis() / 1000.0)).setScale(4, BigDecimal.ROUND_HALF_UP);
+        return new BigDecimal(String.valueOf(System.currentTimeMillis() / 1000.0)).setScale(4, RoundingMode.HALF_UP);
     }
 
     public static void appendHeartbeat(final VirtualFile file, final Project project, final boolean isWrite, @Nullable final LineStats lineStats) {

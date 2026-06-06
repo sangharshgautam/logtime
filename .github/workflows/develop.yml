@@ -139,7 +139,7 @@ jobs:
 
       # Run Verify Plugin task and IntelliJ Plugin Verifier tool
       - name: Run Plugin Verification tasks
-        run: ./gradlew verifyPlugin
+        run: ./gradlew verifyPlugin --no-build-cache
 
       # Collect Plugin Verifier Result
       - name: Collect Plugin Verifier Result
