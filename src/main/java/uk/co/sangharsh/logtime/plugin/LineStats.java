@@ -1,7 +1,7 @@
 /* ==========================================================
 File:        LineStats.java
 Description: Stores total lines in file and current cursor position.
-Maintainer:  WakaTime <support@wakatime.com>
+Maintainer:  LogTime <support@wakatime.com>
 License:     BSD, see LICENSE for more details.
 Website:     https://wakatime.com/
 ===========================================================*/

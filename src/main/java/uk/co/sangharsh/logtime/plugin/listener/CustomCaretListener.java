@@ -1,7 +1,7 @@
 /* ==========================================================
 File:        CustomCaretListener.java
 Description: Logs time from cursor movement events.
-Maintainer:  WakaTime <support@wakatime.com>
+Maintainer:  LogTime <support@wakatime.com>
 License:     BSD, see LICENSE for more details.
 Website:     https://wakatime.com/
 ===========================================================*/
@@ -16,28 +16,28 @@ import com.intellij.openapi.editor.event.CaretListener;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import uk.co.sangharsh.logtime.plugin.LineStats;
-import uk.co.sangharsh.logtime.plugin.WakaTime;
+import uk.co.sangharsh.logtime.plugin.LogTime;
 
 public class CustomCaretListener implements CaretListener {
     @Override
     public void caretPositionChanged(CaretEvent event) {
-        // WakaTime.log.debug("caret event");
+        // LogTime.log.debug("caret event");
         try {
-            if (!WakaTime.isAppActive()) return;
+            if (!LogTime.isAppActive()) return;
             Editor editor = event.getEditor();
             Document document = editor.getDocument();
-            VirtualFile file = WakaTime.getFile(document);
+            VirtualFile file = LogTime.getFile(document);
             if (file == null) return;
             Project project = editor.getProject();
-            if (!WakaTime.isProjectInitialized(project)) return;
+            if (!LogTime.isProjectInitialized(project)) return;
             ApplicationManager.getApplication().invokeLater(new Runnable() {
                 public void run() {
-                    LineStats lineStats = WakaTime.getLineStats(document, editor);
-                    WakaTime.appendHeartbeat(file, project, false, lineStats);
+                    LineStats lineStats = LogTime.getLineStats(document, editor);
+                    LogTime.appendHeartbeat(file, project, false, lineStats);
                 }
             });
         } catch(Exception e) {
-            WakaTime.debugException(e);
+            LogTime.debugException(e);
         }
     }
 }

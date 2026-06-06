@@ -1,7 +1,7 @@
 /* ==========================================================
 File:        Dependencies.java
 Description: Manages plugin dependencies.
-Maintainer:  WakaTime <support@wakatime.com>
+Maintainer:  LogTime <support@wakatime.com>
 License:     BSD, see LICENSE for more details.
 Website:     https://wakatime.com/
 ===========================================================*/
@@ -56,7 +56,7 @@ public class Dependencies {
         if (wakatimeHome != null && !wakatimeHome.trim().isEmpty()) {
             File resourcesFolder = new File(wakatimeHome.trim());
             Dependencies.resourcesLocation = resourcesFolder.getAbsolutePath();
-            WakaTime.log.debug("Using $WAKATIME_HOME for resources folder: " + Dependencies.resourcesLocation);
+            LogTime.log.debug("Using $WAKATIME_HOME for resources folder: " + Dependencies.resourcesLocation);
             return Dependencies.resourcesLocation;
         }
 
@@ -100,8 +100,8 @@ public class Dependencies {
             while ((s = stdError.readLine()) != null) {
                 output += s;
             }
-            WakaTime.log.debug("wakatime-cli local version output: \"" + output + "\"");
-            WakaTime.log.debug("wakatime-cli local version exit code: " + p.exitValue());
+            LogTime.log.debug("wakatime-cli local version output: \"" + output + "\"");
+            LogTime.log.debug("wakatime-cli local version exit code: " + p.exitValue());
 
             if (p.exitValue() != 0) return true;
 
@@ -111,25 +111,25 @@ public class Dependencies {
             }
 
             String accessed = ConfigFile.get("internal", "cli_version_last_accessed", true);
-            BigInteger now = WakaTime.getCurrentTimestamp().toBigInteger();
+            BigInteger now = LogTime.getCurrentTimestamp().toBigInteger();
             if (accessed != null && accessed.trim().equals("true")) {
                 try {
                     BigInteger lastAccessed = new BigInteger(accessed.trim());
                     BigInteger fourHours = BigInteger.valueOf(4 * 3600);
                     if (lastAccessed != null && lastAccessed.add(fourHours).compareTo(now) > 0) {
-                        WakaTime.log.debug("Skip checking for wakatime-cli updates because recently checked "+ (now.subtract(lastAccessed).toString()) +" seconds ago");
+                        LogTime.log.debug("Skip checking for wakatime-cli updates because recently checked "+ (now.subtract(lastAccessed).toString()) +" seconds ago");
                         return false;
                     }
                 } catch (NumberFormatException e2) {
-                    WakaTime.warnException(e2);
+                    LogTime.warnException(e2);
                 }
             }
 
             String cliVersion = latestCliVersion();
-            WakaTime.log.debug("Latest wakatime-cli version: " + cliVersion);
+            LogTime.log.debug("Latest wakatime-cli version: " + cliVersion);
             if (output.trim().equals(cliVersion)) return false;
         } catch (Exception e) {
-            WakaTime.warnException(e);
+            LogTime.warnException(e);
         }
         return true;
     }
@@ -146,12 +146,12 @@ public class Dependencies {
                     ConfigFile.set("internal", "cli_version_last_modified", true, resp.lastModified);
                     ConfigFile.set("internal", "cli_version", true, cliVersion);
                 }
-                BigInteger now = WakaTime.getCurrentTimestamp().toBigInteger();
+                BigInteger now = LogTime.getCurrentTimestamp().toBigInteger();
                 ConfigFile.set("internal", "cli_version_last_accessed", true, now.toString());
                 return cliVersion;
             }
         } catch (Exception e) {
-            WakaTime.log.warn(e);
+            LogTime.log.warn(e);
         }
         return "Unknown";
     }
@@ -160,7 +160,7 @@ public class Dependencies {
         if (System.getenv("WAKATIME_CLI_LOCATION") != null && !System.getenv("WAKATIME_CLI_LOCATION").trim().isEmpty()) {
             File wakatimeCLI = new File(System.getenv("WAKATIME_CLI_LOCATION"));
             if (wakatimeCLI.exists()) {
-                WakaTime.log.debug("Using $WAKATIME_CLI_LOCATION as CLI Executable: " + wakatimeCLI);
+                LogTime.log.debug("Using $WAKATIME_CLI_LOCATION as CLI Executable: " + wakatimeCLI);
                 return System.getenv("WAKATIME_CLI_LOCATION");
             }
         }
@@ -193,7 +193,7 @@ public class Dependencies {
                 File oldZipFile = new File(zipFile);
                 oldZipFile.delete();
             } catch (IOException e) {
-                WakaTime.log.warn(e);
+                LogTime.log.warn(e);
             }
         }
     }
@@ -227,11 +227,11 @@ public class Dependencies {
     }
 
     private static void reportMissingPlatformSupport(String osname, String architecture) {
-        String url = "https://api.wakatime.com/api/v1/cli-missing?osname=" + osname + "&architecture=" + architecture + "&plugin=" + WakaTime.IDE_NAME;
+        String url = "https://api.wakatime.com/api/v1/cli-missing?osname=" + osname + "&architecture=" + architecture + "&plugin=" + LogTime.IDE_NAME;
         try {
             getUrlAsString(url, null, false);
         } catch (Exception e) {
-            WakaTime.log.warn(e);
+            LogTime.log.warn(e);
         }
     }
 
@@ -251,12 +251,12 @@ public class Dependencies {
         try {
             downloadUrl = new URL(url);
         } catch (MalformedURLException e) {
-            WakaTime.log.error("DownloadFile(" + url + ") failed to init new URL");
-            WakaTime.log.error(e);
+            LogTime.log.error("DownloadFile(" + url + ") failed to init new URL");
+            LogTime.log.error(e);
             return false;
         }
 
-        WakaTime.log.debug("DownloadFile(" + downloadUrl.toString() + ")");
+        LogTime.log.debug("DownloadFile(" + downloadUrl.toString() + ")");
 
         setupProxy();
 
@@ -270,7 +270,7 @@ public class Dependencies {
             teardownProxy();
             return true;
         } catch (RuntimeException e) {
-            WakaTime.log.warn(e);
+            LogTime.log.warn(e);
             try {
                 // try downloading without verifying SSL cert (https://github.com/wakatime/jetbrains-wakatime/issues/46)
                 SSLContext SSL_CONTEXT = SSLContext.getInstance("SSL");
@@ -290,18 +290,18 @@ public class Dependencies {
                 teardownProxy();
                 return true;
             } catch (NoSuchAlgorithmException e1) {
-                WakaTime.log.warn(e1);
+                LogTime.log.warn(e1);
             } catch (KeyManagementException e1) {
-                WakaTime.log.warn(e1);
+                LogTime.log.warn(e1);
             } catch (IOException e1) {
-                WakaTime.log.warn(e1);
+                LogTime.log.warn(e1);
             } catch (IllegalArgumentException e1) {
-                WakaTime.log.warn(e1);
+                LogTime.log.warn(e1);
             } catch (Exception e1) {
-                WakaTime.log.warn(e1);
+                LogTime.log.warn(e1);
             }
         } catch (IOException e) {
-            WakaTime.log.warn(e);
+            LogTime.log.warn(e);
         }
 
         teardownProxy();
@@ -315,12 +315,12 @@ public class Dependencies {
         try {
             downloadUrl = new URL(url);
         } catch (MalformedURLException e) {
-            WakaTime.log.error("getUrlAsString(" + url + ") failed to init new URL");
-            WakaTime.log.error(e);
+            LogTime.log.error("getUrlAsString(" + url + ") failed to init new URL");
+            LogTime.log.error(e);
             return null;
         }
 
-        WakaTime.log.debug("getUrlAsString(" + downloadUrl.toString() + ")");
+        LogTime.log.debug("getUrlAsString(" + downloadUrl.toString() + ")");
 
         setupProxy();
 
@@ -345,7 +345,7 @@ public class Dependencies {
             inputStream.close();
             if (updateLastModified && conn.getResponseCode() == 200) responseLastModified = conn.getHeaderField("Last-Modified");
         } catch (RuntimeException e) {
-            WakaTime.log.warn(e);
+            LogTime.log.warn(e);
             try {
                 // try downloading without verifying SSL cert (https://github.com/wakatime/jetbrains-wakatime/issues/46)
                 SSLContext SSL_CONTEXT = SSLContext.getInstance("SSL");
@@ -369,22 +369,22 @@ public class Dependencies {
                 inputStream.close();
                 if (updateLastModified && conn.getResponseCode() == 200) responseLastModified = conn.getHeaderField("Last-Modified");
             } catch (NoSuchAlgorithmException e1) {
-                WakaTime.log.warn(e1);
+                LogTime.log.warn(e1);
             } catch (KeyManagementException e1) {
-                WakaTime.log.warn(e1);
+                LogTime.log.warn(e1);
             } catch (UnknownHostException e1) {
-                WakaTime.log.warn(e1);
+                LogTime.log.warn(e1);
             } catch (IOException e1) {
-                WakaTime.log.warn(e1);
+                LogTime.log.warn(e1);
             } catch (IllegalArgumentException e1) {
-                WakaTime.log.warn(e1);
+                LogTime.log.warn(e1);
             } catch (Exception e1) {
-                WakaTime.log.warn(e1);
+                LogTime.log.warn(e1);
             }
         } catch (UnknownHostException e) {
-            WakaTime.log.warn(e);
+            LogTime.log.warn(e);
         } catch (Exception e) {
-            WakaTime.log.warn(e);
+            LogTime.log.warn(e);
         }
 
         teardownProxy();
@@ -419,8 +419,8 @@ public class Dependencies {
                 }
 
             } catch (URISyntaxException e) {
-                WakaTime.log.error("Proxy string must follow https://user:pass@host:port format: " + proxyConfig);
-                WakaTime.errorException(e);
+                LogTime.log.error("Proxy string must follow https://user:pass@host:port format: " + proxyConfig);
+                LogTime.errorException(e);
             }
         }
     }
@@ -530,7 +530,7 @@ public class Dependencies {
         try {
             file.setExecutable(true);
         } catch(SecurityException e) {
-            WakaTime.warnException(e);
+            LogTime.warnException(e);
         }
     }
 
@@ -538,7 +538,7 @@ public class Dependencies {
         try {
             return Files.isSymbolicLink(filepath.toPath());
         } catch(SecurityException e) {
-            WakaTime.warnException(e);
+            LogTime.warnException(e);
             return false;
         }
     }
@@ -547,7 +547,7 @@ public class Dependencies {
         try {
             return filepath.isDirectory();
         } catch(SecurityException e) {
-            WakaTime.warnException(e);
+            LogTime.warnException(e);
             return false;
         }
     }
@@ -561,11 +561,11 @@ public class Dependencies {
                 try {
                     Files.createSymbolicLink(sourceLink.toPath(), new File(destination).toPath());
                 } catch (Exception e) {
-                    WakaTime.warnException(e);
+                    LogTime.warnException(e);
                     try {
                         Files.copy(new File(destination).toPath(), sourceLink.toPath(), StandardCopyOption.REPLACE_EXISTING);
                     } catch (Exception ex) {
-                        WakaTime.warnException(ex);
+                        LogTime.warnException(ex);
                     }
                 }
             }
@@ -573,7 +573,7 @@ public class Dependencies {
             try {
                 Files.copy(new File(destination).toPath(), sourceLink.toPath(), StandardCopyOption.REPLACE_EXISTING);
             } catch (Exception e) {
-                WakaTime.warnException(e);
+                LogTime.warnException(e);
             }
         }
     }

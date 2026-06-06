@@ -1,7 +1,7 @@
 /* ==========================================================
 File:        CustomSaveListener.java
 Description: Sends a heartbeat when a file is saved.
-Maintainer:  WakaTime <support@wakatime.com>
+Maintainer:  LogTime <support@wakatime.com>
 License:     BSD, see LICENSE for more details.
 Website:     https://wakatime.com/
 ===========================================================*/
@@ -15,28 +15,28 @@ import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import uk.co.sangharsh.logtime.plugin.LineStats;
-import uk.co.sangharsh.logtime.plugin.WakaTime;
+import uk.co.sangharsh.logtime.plugin.LogTime;
 import org.jetbrains.annotations.NotNull;
 
 public class CustomSaveListener implements FileDocumentManagerListener {
     @Override
     public void beforeDocumentSaving(Document document) {
-        // WakaTime.log.debug("beforeDocumentSaving event");
+        // LogTime.log.debug("beforeDocumentSaving event");
         try {
-            if (!WakaTime.isAppActive()) return;
-            VirtualFile file = WakaTime.getFile(document);
+            if (!LogTime.isAppActive()) return;
+            VirtualFile file = LogTime.getFile(document);
             if (file == null) return;
-            WakaTime.markFileWithHumanTyping(file);
-            Project project = WakaTime.getProject(document);
-            if (!WakaTime.isProjectInitialized(project)) return;
+            LogTime.markFileWithHumanTyping(file);
+            Project project = LogTime.getProject(document);
+            if (!LogTime.isProjectInitialized(project)) return;
             LineStats lineStats = new LineStats();
             if (project != null) {
                 Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
-                lineStats = WakaTime.getLineStats(document, editor);
+                lineStats = LogTime.getLineStats(document, editor);
             }
-            WakaTime.appendHeartbeat(file, project, true, lineStats);
+            LogTime.appendHeartbeat(file, project, true, lineStats);
         } catch(Exception e) {
-            WakaTime.debugException(e);
+            LogTime.debugException(e);
         }
     }
 

@@ -1,7 +1,7 @@
 /* ==========================================================
 File:        CustomDocumentListener.java
 Description: Logs time from document change events.
-Maintainer:  WakaTime <support@wakatime.com>
+Maintainer:  LogTime <support@wakatime.com>
 License:     BSD, see LICENSE for more details.
 Website:     https://wakatime.com/
 ===========================================================*/
@@ -14,26 +14,26 @@ import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import uk.co.sangharsh.logtime.plugin.LineStats;
-import uk.co.sangharsh.logtime.plugin.WakaTime;
+import uk.co.sangharsh.logtime.plugin.LogTime;
 
 public class CustomDocumentListener implements BulkAwareDocumentListener.Simple {
     @Override
     public void documentChangedNonBulk(DocumentEvent documentEvent) {
-        // WakaTime.log.debug("documentChangedNonBulk event");
+        // LogTime.log.debug("documentChangedNonBulk event");
         try {
-            if (!WakaTime.isAppActive()) return;
+            if (!LogTime.isAppActive()) return;
             Document document = documentEvent.getDocument();
-            VirtualFile file = WakaTime.getFile(document);
+            VirtualFile file = LogTime.getFile(document);
             if (file == null) return;
             if (documentEvent.getNewFragment().length() == 1) {
-                WakaTime.markFileWithHumanTyping(file);
+                LogTime.markFileWithHumanTyping(file);
             }
-            Project project = WakaTime.getProject(document);
-            if (!WakaTime.isProjectInitialized(project)) return;
-            LineStats lineStats = WakaTime.getLineStats(document);
-            WakaTime.appendHeartbeat(file, project, false, lineStats);
+            Project project = LogTime.getProject(document);
+            if (!LogTime.isProjectInitialized(project)) return;
+            LineStats lineStats = LogTime.getLineStats(document);
+            LogTime.appendHeartbeat(file, project, false, lineStats);
         } catch(Exception e) {
-            WakaTime.debugException(e);
+            LogTime.debugException(e);
         }
     }
 }
