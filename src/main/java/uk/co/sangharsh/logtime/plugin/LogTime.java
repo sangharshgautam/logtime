@@ -10,6 +10,7 @@ package uk.co.sangharsh.logtime.plugin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.AppTopics;
+import com.intellij.util.net.HttpConfigurable;
 import uk.co.sangharsh.logtime.plugin.listener.*;
 import uk.co.sangharsh.logtime.plugin.service.JiraDurationUtils;
 import uk.co.sangharsh.logtime.plugin.service.JiraService;
@@ -40,7 +41,6 @@ import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.WindowManager;
 import com.intellij.util.concurrency.AppExecutorUtil;
 import com.intellij.util.messages.MessageBusConnection;
-import com.intellij.util.proxy.ProxyManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import uk.co.sangharsh.logtime.plugin.service.TimeSpent;
