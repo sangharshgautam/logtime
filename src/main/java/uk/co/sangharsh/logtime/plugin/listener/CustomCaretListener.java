@@ -1,9 +1,9 @@
 /* ==========================================================
 File:        CustomCaretListener.java
 Description: Logs time from cursor movement events.
-Maintainer:  LogTime <support@wakatime.com>
+Maintainer:  LogTime <support@logtime.com>
 License:     BSD, see LICENSE for more details.
-Website:     https://wakatime.com/
+Website:     https://logtime.com/
 ===========================================================*/
 
 package uk.co.sangharsh.logtime.plugin.listener;

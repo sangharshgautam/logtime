@@ -1,9 +1,9 @@
 /* ==========================================================
 File:        CustomStatusBar.java
 Description: Shows today's total code time in the status bar.
-Maintainer:  LogTime <support@wakatime.com>
+Maintainer:  LogTime <support@logtime.com>
 License:     BSD, see LICENSE for more details.
-Website:     https://wakatime.com/
+Website:     https://logtime.com/
 ===========================================================*/
 
 package uk.co.sangharsh.logtime.plugin;

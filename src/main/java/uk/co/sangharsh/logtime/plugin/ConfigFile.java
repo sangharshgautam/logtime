@@ -1,9 +1,9 @@
 /* ==========================================================
 File:        ConfigFile.java
 Description: Read and write settings from the INI config file.
-Maintainer:  LogTime <support@wakatime.com>
+Maintainer:  LogTime <support@logtime.com>
 License:     BSD, see LICENSE for more details.
-Website:     https://wakatime.com/
+Website:     https://logtime.com/
 ===========================================================*/
 
 package uk.co.sangharsh.logtime.plugin;
@@ -11,9 +11,9 @@ package uk.co.sangharsh.logtime.plugin;
 import java.io.*;
 
 public class ConfigFile {
-    private static final String fileName = ".wakatime.cfg";
-    private static final String internalFileName = "wakatime-internal.cfg";
-    private static final String defaultDashboardUrl = "https://wakatime.com/dashboard";
+    private static final String fileName = ".logtime.cfg";
+    private static final String internalFileName = "logtime-internal.cfg";
+    private static final String defaultDashboardUrl = "https://logtime.com/dashboard";
     private static String cachedHomeFolder = null;
     private static String _api_key = "";
     private static String _jira_url = "";
@@ -22,13 +22,13 @@ public class ConfigFile {
 
     private static String getConfigFilePath(boolean internal) {
         if (ConfigFile.cachedHomeFolder == null) {
-            String wakatimeHome = System.getenv("WAKATIME_HOME");
-            if (wakatimeHome != null && !wakatimeHome.trim().isEmpty()) {
-                File folder = new File(wakatimeHome.trim());
+            String logtimeHome = System.getenv("WAKATIME_HOME");
+            if (logtimeHome != null && !logtimeHome.trim().isEmpty()) {
+                File folder = new File(logtimeHome.trim());
                 ConfigFile.cachedHomeFolder = folder.getAbsolutePath();
                 LogTime.log.debug("Using $WAKATIME_HOME for config folder: " + ConfigFile.cachedHomeFolder);
                 if (internal) {
-                    return new File(new File(ConfigFile.cachedHomeFolder, ".wakatime"), internalFileName).getAbsolutePath();
+                    return new File(new File(ConfigFile.cachedHomeFolder, ".logtime"), internalFileName).getAbsolutePath();
                 }
                 return new File(ConfigFile.cachedHomeFolder, fileName).getAbsolutePath();
             }
@@ -36,7 +36,7 @@ public class ConfigFile {
             LogTime.log.debug("Using $HOME for config folder: " + ConfigFile.cachedHomeFolder);
         }
         if (internal) {
-            return new File(new File(ConfigFile.cachedHomeFolder, ".wakatime"), internalFileName).getAbsolutePath();
+            return new File(new File(ConfigFile.cachedHomeFolder, ".logtime"), internalFileName).getAbsolutePath();
         }
         return new File(ConfigFile.cachedHomeFolder, fileName).getAbsolutePath();
     }

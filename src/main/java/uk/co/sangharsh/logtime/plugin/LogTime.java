@@ -1,9 +1,9 @@
 /* ==========================================================
 File:        LogTime.java
 Description: Automatic time tracking for JetBrains IDEs.
-Maintainer:  LogTime <support@wakatime.com>
+Maintainer:  LogTime <support@logtime.com>
 License:     BSD, see LICENSE for more details.
-Website:     https://wakatime.com/
+Website:     https://logtime.com/
 ===========================================================*/
 
 package uk.co.sangharsh.logtime.plugin;
@@ -92,8 +92,8 @@ public class LogTime implements ApplicationComponent {
             // use PluginManagerCore if PluginManager deprecated
             VERSION = PluginManagerCore.getPlugin(PluginId.getId("uk.co.sangharsh.logtime.plugin")).getVersion();
         }
-        log.info("Initializing LogTime plugin v" + VERSION + " (https://wakatime.com/)");
-        //System.out.println("Initializing LogTime plugin v" + VERSION + " (https://wakatime.com/)");
+        log.info("Initializing LogTime plugin v" + VERSION + " (https://logtime.com/)");
+        //System.out.println("Initializing LogTime plugin v" + VERSION + " (https://logtime.com/)");
 
         // Set runtime constants
         IDE_NAME = ApplicationNamesInfo.getInstance().getFullProductName().replaceAll(" ", "").toLowerCase();
@@ -111,28 +111,28 @@ public class LogTime implements ApplicationComponent {
         ApplicationManager.getApplication().executeOnPooledThread(new Runnable() {
             public void run() {
                 if (!Dependencies.isCLIInstalled()) {
-                    log.info("Downloading and installing wakatime-cli...");
+                    log.info("Downloading and installing logtime-cli...");
                     Dependencies.installCLI();
                     LogTime.READY = true;
-                    log.info("Finished downloading and installing wakatime-cli.");
+                    log.info("Finished downloading and installing logtime-cli.");
                 } else if (Dependencies.isCLIOld()) {
                     if (System.getenv("WAKATIME_CLI_LOCATION") != null && !System.getenv("WAKATIME_CLI_LOCATION").trim().isEmpty()) {
-                        File wakatimeCLI = new File(System.getenv("WAKATIME_CLI_LOCATION"));
-                        if (wakatimeCLI.exists()) {
+                        File logtimeCLI = new File(System.getenv("WAKATIME_CLI_LOCATION"));
+                        if (logtimeCLI.exists()) {
                           log.warn("$WAKATIME_CLI_LOCATION is out of date, please update it.");
                         }
                     } else {
-                        log.info("Upgrading wakatime-cli ...");
+                        log.info("Upgrading logtime-cli ...");
                         Dependencies.installCLI();
                         LogTime.READY = true;
-                        log.info("Finished upgrading wakatime-cli.");
+                        log.info("Finished upgrading logtime-cli.");
                     }
                 } else {
                     LogTime.READY = true;
-                    log.info("wakatime-cli is up to date.");
+                    log.info("logtime-cli is up to date.");
                 }
-                Dependencies.createSymlink(Dependencies.combinePaths(Dependencies.getResourcesLocation(), "wakatime-cli"), Dependencies.getCLILocation());
-                log.debug("wakatime-cli location: " + Dependencies.getCLILocation());
+                Dependencies.createSymlink(Dependencies.combinePaths(Dependencies.getResourcesLocation(), "logtime-cli"), Dependencies.getCLILocation());
+                log.debug("logtime-cli location: " + Dependencies.getCLILocation());
             }
         });
     }
@@ -271,7 +271,7 @@ public class LogTime implements ApplicationComponent {
         if (file.getFileSystem().getProtocol().equals("cwm")) {
             try {
                 byte[] content = file.contentsToByteArray(true);
-                File tempFile = FileUtil.createTempFile("wakatime.", file.getName());
+                File tempFile = FileUtil.createTempFile("logtime.", file.getName());
                 FileUtil.writeToFile(tempFile, content);
                 localFile = tempFile.getAbsolutePath();
             } catch (IOException e) {
@@ -441,7 +441,7 @@ public class LogTime implements ApplicationComponent {
                     try {
                         stdin.flush();
                         stdin.close();
-                    } catch (IOException e) { /* ignored because wakatime-cli closes pipe after receiving \n */ }
+                    } catch (IOException e) { /* ignored because logtime-cli closes pipe after receiving \n */ }
                 } catch (IOException e) {
                     warnException(e);
                 }
@@ -636,13 +636,13 @@ public class LogTime implements ApplicationComponent {
             return null;
         }
 
-        return IDE_NAME+"/"+IDE_VERSION+" "+IDE_NAME+"-wakatime/"+VERSION;
+        return IDE_NAME+"/"+IDE_VERSION+" "+IDE_NAME+"-logtime/"+VERSION;
     }
 
     private static String getBuiltinProxy() {
         HttpConfigurable config = HttpConfigurable.getInstance();
 
-        if (!config.isHttpProxyEnabledForUrl("https://api.wakatime.com")) return null;
+        if (!config.isHttpProxyEnabledForUrl("https://api.logtime.com")) return null;
 
         String host = config.PROXY_HOST;
         if (host != null) {

@@ -1,9 +1,9 @@
 /* ==========================================================
 File:        Dependencies.java
 Description: Manages plugin dependencies.
-Maintainer:  LogTime <support@wakatime.com>
+Maintainer:  LogTime <support@logtime.com>
 License:     BSD, see LICENSE for more details.
-Website:     https://wakatime.com/
+Website:     https://logtime.com/
 ===========================================================*/
 
 package uk.co.sangharsh.logtime.plugin;
@@ -46,15 +46,15 @@ public class Dependencies {
     private static String resourcesLocation = null;
     private static String originalProxyHost = null;
     private static String originalProxyPort = null;
-    private static String githubReleasesUrl = "https://api.github.com/repos/wakatime/wakatime-cli/releases/latest";
-    private static String githubDownloadUrl = "https://github.com/wakatime/wakatime-cli/releases/latest/download";
+    private static String githubReleasesUrl = "https://api.github.com/repos/logtime/logtime-cli/releases/latest";
+    private static String githubDownloadUrl = "https://github.com/logtime/logtime-cli/releases/latest/download";
 
     public static String getResourcesLocation() {
         if (Dependencies.resourcesLocation != null) return Dependencies.resourcesLocation;
 
-        String wakatimeHome = System.getenv("WAKATIME_HOME");
-        if (wakatimeHome != null && !wakatimeHome.trim().isEmpty()) {
-            File resourcesFolder = new File(wakatimeHome.trim());
+        String logtimeHome = System.getenv("WAKATIME_HOME");
+        if (logtimeHome != null && !logtimeHome.trim().isEmpty()) {
+            File resourcesFolder = new File(logtimeHome.trim());
             Dependencies.resourcesLocation = resourcesFolder.getAbsolutePath();
             LogTime.log.debug("Using $WAKATIME_HOME for resources folder: " + Dependencies.resourcesLocation);
             return Dependencies.resourcesLocation;
@@ -62,13 +62,13 @@ public class Dependencies {
 
         if (isWindows()) {
             File windowsHome = new File(System.getenv("USERPROFILE"));
-            File resourcesFolder = new File(windowsHome, ".wakatime");
+            File resourcesFolder = new File(windowsHome, ".logtime");
             Dependencies.resourcesLocation = resourcesFolder.getAbsolutePath();
             return Dependencies.resourcesLocation;
         }
 
         File userHomeDir = new File(System.getProperty("user.home"));
-        File resourcesFolder = new File(userHomeDir, ".wakatime");
+        File resourcesFolder = new File(userHomeDir, ".logtime");
         Dependencies.resourcesLocation = resourcesFolder.getAbsolutePath();
         return Dependencies.resourcesLocation;
     }
@@ -100,12 +100,12 @@ public class Dependencies {
             while ((s = stdError.readLine()) != null) {
                 output += s;
             }
-            LogTime.log.debug("wakatime-cli local version output: \"" + output + "\"");
-            LogTime.log.debug("wakatime-cli local version exit code: " + p.exitValue());
+            LogTime.log.debug("logtime-cli local version output: \"" + output + "\"");
+            LogTime.log.debug("logtime-cli local version exit code: " + p.exitValue());
 
             if (p.exitValue() != 0) return true;
 
-            // disable updating wakatime-cli when it was built from source
+            // disable updating logtime-cli when it was built from source
             if (output.trim().equals("<local-build>")) {
                 return false;
             }
@@ -117,7 +117,7 @@ public class Dependencies {
                     BigInteger lastAccessed = new BigInteger(accessed.trim());
                     BigInteger fourHours = BigInteger.valueOf(4 * 3600);
                     if (lastAccessed != null && lastAccessed.add(fourHours).compareTo(now) > 0) {
-                        LogTime.log.debug("Skip checking for wakatime-cli updates because recently checked "+ (now.subtract(lastAccessed).toString()) +" seconds ago");
+                        LogTime.log.debug("Skip checking for logtime-cli updates because recently checked "+ (now.subtract(lastAccessed).toString()) +" seconds ago");
                         return false;
                     }
                 } catch (NumberFormatException e2) {
@@ -126,7 +126,7 @@ public class Dependencies {
             }
 
             String cliVersion = latestCliVersion();
-            LogTime.log.debug("Latest wakatime-cli version: " + cliVersion);
+            LogTime.log.debug("Latest logtime-cli version: " + cliVersion);
             if (output.trim().equals(cliVersion)) return false;
         } catch (Exception e) {
             LogTime.warnException(e);
@@ -158,15 +158,15 @@ public class Dependencies {
 
     public static String getCLILocation() {
         if (System.getenv("WAKATIME_CLI_LOCATION") != null && !System.getenv("WAKATIME_CLI_LOCATION").trim().isEmpty()) {
-            File wakatimeCLI = new File(System.getenv("WAKATIME_CLI_LOCATION"));
-            if (wakatimeCLI.exists()) {
-                LogTime.log.debug("Using $WAKATIME_CLI_LOCATION as CLI Executable: " + wakatimeCLI);
+            File logtimeCLI = new File(System.getenv("WAKATIME_CLI_LOCATION"));
+            if (logtimeCLI.exists()) {
+                LogTime.log.debug("Using $WAKATIME_CLI_LOCATION as CLI Executable: " + logtimeCLI);
                 return System.getenv("WAKATIME_CLI_LOCATION");
             }
         }
 
         String ext = isWindows() ? ".exe" : "";
-        return combinePaths(getResourcesLocation(), "wakatime-cli-" + osname() + "-" + architecture() + ext);
+        return combinePaths(getResourcesLocation(), "logtime-cli-" + osname() + "-" + architecture() + ext);
     }
 
     public static void installCLI() {
@@ -176,11 +176,11 @@ public class Dependencies {
         checkMissingPlatformSupport();
 
         String url = getCLIDownloadUrl();
-        String zipFile = combinePaths(getResourcesLocation(), "wakatime-cli.zip");
+        String zipFile = combinePaths(getResourcesLocation(), "logtime-cli.zip");
 
         if (downloadFile(url, zipFile)) {
 
-            // Delete old wakatime-cli if it exists
+            // Delete old logtime-cli if it exists
             File file = new File(getCLILocation());
             recursiveDelete(file);
 
@@ -227,7 +227,7 @@ public class Dependencies {
     }
 
     private static void reportMissingPlatformSupport(String osname, String architecture) {
-        String url = "https://api.wakatime.com/api/v1/cli-missing?osname=" + osname + "&architecture=" + architecture + "&plugin=" + LogTime.IDE_NAME;
+        String url = "https://api.logtime.com/api/v1/cli-missing?osname=" + osname + "&architecture=" + architecture + "&plugin=" + LogTime.IDE_NAME;
         try {
             getUrlAsString(url, null, false);
         } catch (Exception e) {
@@ -236,7 +236,7 @@ public class Dependencies {
     }
 
     private static String getCLIDownloadUrl() {
-        return githubDownloadUrl + "/wakatime-cli-" + osname() + "-" + architecture() + ".zip";
+        return githubDownloadUrl + "/logtime-cli-" + osname() + "-" + architecture() + ".zip";
     }
 
     public static boolean downloadFile(String url, String saveAs) {
@@ -272,12 +272,12 @@ public class Dependencies {
         } catch (RuntimeException e) {
             LogTime.log.warn(e);
             try {
-                // try downloading without verifying SSL cert (https://github.com/wakatime/jetbrains-wakatime/issues/46)
+                // try downloading without verifying SSL cert (https://github.com/logtime/jetbrains-logtime/issues/46)
                 SSLContext SSL_CONTEXT = SSLContext.getInstance("SSL");
                 SSL_CONTEXT.init(null, new TrustManager[] { new LocalSSLTrustManager() }, null);
                 HttpsURLConnection.setDefaultSSLSocketFactory(SSL_CONTEXT.getSocketFactory());
                 HttpsURLConnection conn = (HttpsURLConnection)downloadUrl.openConnection();
-                conn.setRequestProperty("User-Agent", "github.com/wakatime/jetbrains-wakatime");
+                conn.setRequestProperty("User-Agent", "github.com/logtime/jetbrains-logtime");
                 InputStream inputStream = conn.getInputStream();
                 fos = new FileOutputStream(saveAs);
                 int bytesRead = -1;
@@ -328,7 +328,7 @@ public class Dependencies {
         int statusCode = -1;
         try {
             HttpsURLConnection conn = (HttpsURLConnection) downloadUrl.openConnection();
-            conn.setRequestProperty("User-Agent", "github.com/wakatime/jetbrains-wakatime");
+            conn.setRequestProperty("User-Agent", "github.com/logtime/jetbrains-logtime");
             if (lastModified != null && !lastModified.trim().equals("")) {
                 conn.setRequestProperty("If-Modified-Since", lastModified.trim());
             }
@@ -347,12 +347,12 @@ public class Dependencies {
         } catch (RuntimeException e) {
             LogTime.log.warn(e);
             try {
-                // try downloading without verifying SSL cert (https://github.com/wakatime/jetbrains-wakatime/issues/46)
+                // try downloading without verifying SSL cert (https://github.com/logtime/jetbrains-logtime/issues/46)
                 SSLContext SSL_CONTEXT = SSLContext.getInstance("SSL");
                 SSL_CONTEXT.init(null, new TrustManager[]{new LocalSSLTrustManager()}, null);
                 HttpsURLConnection.setDefaultSSLSocketFactory(SSL_CONTEXT.getSocketFactory());
                 HttpsURLConnection conn = (HttpsURLConnection) downloadUrl.openConnection();
-                conn.setRequestProperty("User-Agent", "github.com/wakatime/jetbrains-wakatime");
+                conn.setRequestProperty("User-Agent", "github.com/logtime/jetbrains-logtime");
                 if (lastModified != null && !lastModified.trim().equals("")) {
                     conn.setRequestProperty("If-Modified-Since", lastModified.trim());
                 }
@@ -392,7 +392,7 @@ public class Dependencies {
     }
 
     /**
-     * Configures a proxy if one is set in ~/.wakatime.cfg.
+     * Configures a proxy if one is set in ~/.logtime.cfg.
      */
     private static void setupProxy() {
         String proxyConfig = ConfigFile.get("settings", "proxy", false);
