@@ -40,7 +40,7 @@ import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.WindowManager;
 import com.intellij.util.concurrency.AppExecutorUtil;
 import com.intellij.util.messages.MessageBusConnection;
-import com.intellij.util.net.HttpConfigurable;
+import com.intellij.util.proxy.ProxyManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import uk.co.sangharsh.logtime.plugin.service.TimeSpent;
@@ -85,12 +85,13 @@ public class LogTime implements ApplicationComponent {
     }
 
     public void initComponent() {
+        PluginId pluginId = PluginId.getId("uk.co.sangharsh.logtime.plugin");
         try {
             // support older IDE versions with deprecated PluginManager
-            VERSION = PluginManager.getPlugin(PluginId.getId("uk.co.sangharsh.logtime.plugin")).getVersion();
+            VERSION = PluginManager.getPlugin(pluginId).getVersion();
         } catch (Exception e) {
             // use PluginManagerCore if PluginManager deprecated
-            VERSION = PluginManagerCore.getPlugin(PluginId.getId("uk.co.sangharsh.logtime.plugin")).getVersion();
+            VERSION = PluginManagerCore.getPlugin(pluginId).getVersion();
         }
         log.info("Initializing LogTime plugin v" + VERSION + " (https://logtime.com/)");
         //System.out.println("Initializing LogTime plugin v" + VERSION + " (https://logtime.com/)");
@@ -116,10 +117,10 @@ public class LogTime implements ApplicationComponent {
                     LogTime.READY = true;
                     log.info("Finished downloading and installing logtime-cli.");
                 } else if (Dependencies.isCLIOld()) {
-                    if (System.getenv("WAKATIME_CLI_LOCATION") != null && !System.getenv("WAKATIME_CLI_LOCATION").trim().isEmpty()) {
-                        File logtimeCLI = new File(System.getenv("WAKATIME_CLI_LOCATION"));
+                    if (System.getenv("LOGTIME_CLI_LOCATION") != null && !System.getenv("LOGTIME_CLI_LOCATION").trim().isEmpty()) {
+                        File logtimeCLI = new File(System.getenv("LOGTIME_CLI_LOCATION"));
                         if (logtimeCLI.exists()) {
-                          log.warn("$WAKATIME_CLI_LOCATION is out of date, please update it.");
+                          log.warn("$LOGTIME_CLI_LOCATION is out of date, please update it.");
                         }
                     } else {
                         log.info("Upgrading logtime-cli ...");
@@ -132,7 +133,7 @@ public class LogTime implements ApplicationComponent {
                     log.info("logtime-cli is up to date.");
                 }
                 Dependencies.createSymlink(Dependencies.combinePaths(Dependencies.getResourcesLocation(), "logtime-cli"), Dependencies.getCLILocation());
-                log.debug("logtime-cli location: " + Dependencies.getCLILocation());
+                log.debug("wakatime-cli location: " + Dependencies.getCLILocation());
             }
         });
     }
@@ -271,7 +272,7 @@ public class LogTime implements ApplicationComponent {
         if (file.getFileSystem().getProtocol().equals("cwm")) {
             try {
                 byte[] content = file.contentsToByteArray(true);
-                File tempFile = FileUtil.createTempFile("logtime.", file.getName());
+                File tempFile = FileUtil.createTempFile("wakatime.", file.getName());
                 FileUtil.writeToFile(tempFile, content);
                 localFile = tempFile.getAbsolutePath();
             } catch (IOException e) {
@@ -441,7 +442,7 @@ public class LogTime implements ApplicationComponent {
                     try {
                         stdin.flush();
                         stdin.close();
-                    } catch (IOException e) { /* ignored because logtime-cli closes pipe after receiving \n */ }
+                    } catch (IOException e) { /* ignored because wakatime-cli closes pipe after receiving \n */ }
                 } catch (IOException e) {
                     warnException(e);
                 }
@@ -636,13 +637,13 @@ public class LogTime implements ApplicationComponent {
             return null;
         }
 
-        return IDE_NAME+"/"+IDE_VERSION+" "+IDE_NAME+"-logtime/"+VERSION;
+        return IDE_NAME+"/"+IDE_VERSION+" "+IDE_NAME+"-wakatime/"+VERSION;
     }
 
     private static String getBuiltinProxy() {
         HttpConfigurable config = HttpConfigurable.getInstance();
 
-        if (!config.isHttpProxyEnabledForUrl("https://api.logtime.com")) return null;
+        if (!config.isHttpProxyEnabledForUrl("https://api.wakatime.com")) return null;
 
         String host = config.PROXY_HOST;
         if (host != null) {

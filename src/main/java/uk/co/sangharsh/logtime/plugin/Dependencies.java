@@ -52,11 +52,11 @@ public class Dependencies {
     public static String getResourcesLocation() {
         if (Dependencies.resourcesLocation != null) return Dependencies.resourcesLocation;
 
-        String logtimeHome = System.getenv("WAKATIME_HOME");
+        String logtimeHome = System.getenv("LOGTIME_HOME");
         if (logtimeHome != null && !logtimeHome.trim().isEmpty()) {
             File resourcesFolder = new File(logtimeHome.trim());
             Dependencies.resourcesLocation = resourcesFolder.getAbsolutePath();
-            LogTime.log.debug("Using $WAKATIME_HOME for resources folder: " + Dependencies.resourcesLocation);
+            LogTime.log.debug("Using $LOGTIME_HOME for resources folder: " + Dependencies.resourcesLocation);
             return Dependencies.resourcesLocation;
         }
 
@@ -157,11 +157,11 @@ public class Dependencies {
     }
 
     public static String getCLILocation() {
-        if (System.getenv("WAKATIME_CLI_LOCATION") != null && !System.getenv("WAKATIME_CLI_LOCATION").trim().isEmpty()) {
-            File logtimeCLI = new File(System.getenv("WAKATIME_CLI_LOCATION"));
+        if (System.getenv("LOGTIME_CLI_LOCATION") != null && !System.getenv("LOGTIME_CLI_LOCATION").trim().isEmpty()) {
+            File logtimeCLI = new File(System.getenv("LOGTIME_CLI_LOCATION"));
             if (logtimeCLI.exists()) {
-                LogTime.log.debug("Using $WAKATIME_CLI_LOCATION as CLI Executable: " + logtimeCLI);
-                return System.getenv("WAKATIME_CLI_LOCATION");
+                LogTime.log.debug("Using $LOGTIME_CLI_LOCATION as CLI Executable: " + logtimeCLI);
+                return System.getenv("LOGTIME_CLI_LOCATION");
             }
         }
 

@@ -28,12 +28,5 @@ public class UrlValidator {
             return false;
         }
     }
-
-    public static void main(String[] args) {
-        System.out.println(isValidURL("https://example.com")); // true
-        System.out.println(isValidURL("ftp://files.server.net"));   // true
-        System.out.println(isValidURL("example.com"));             // false (Missing scheme)
-        System.out.println(isValidURL("http://"));                 // false (Missing host)
-    }
 }
 

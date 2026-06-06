@@ -1,9 +1,9 @@
 /* ==========================================================
 File:        CustomStatusBar.java
 Description: Shows today's total code time in the status bar.
-Maintainer:  LogTime <support@logtime.com>
+Maintainer:  LogTime <support@wakatime.com>
 License:     BSD, see LICENSE for more details.
-Website:     https://logtime.com/
+Website:     https://wakatime.com/
 ===========================================================*/
 
 package uk.co.sangharsh.logtime.plugin;
@@ -16,8 +16,8 @@ import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.StatusBarWidget;
 import com.intellij.openapi.wm.StatusBarWidgetFactory;
 import com.intellij.openapi.wm.WindowManager;
+import com.intellij.ui.JBColor;
 import com.intellij.util.Consumer;
-import com.intellij.util.ui.UIUtil;
 import org.jetbrains.annotations.*;
 
 import javax.swing.*;
@@ -106,7 +106,7 @@ public class CustomStatusBar implements StatusBarWidgetFactory {
             @Override
             public @Nullable
             Icon getIcon() {
-                String theme = UIUtil.isUnderDarcula() ? "dark" : "light";
+                String theme = JBColor.isBright() ? "light" : "dark";
                 return IconLoader.getIcon("status-bar-icon-" + theme + "-theme.svg", LogTime.class);
             }
 
@@ -124,6 +124,7 @@ public class CustomStatusBar implements StatusBarWidgetFactory {
             }
 
             @Override
+            @NotNull
             public StatusBarWidget copy() {
                 return new LogTimeStatusBarWidget(this.widget.project);
             }

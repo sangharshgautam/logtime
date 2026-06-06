@@ -30,11 +30,9 @@ public class CustomCaretListener implements CaretListener {
             if (file == null) return;
             Project project = editor.getProject();
             if (!LogTime.isProjectInitialized(project)) return;
-            ApplicationManager.getApplication().invokeLater(new Runnable() {
-                public void run() {
-                    LineStats lineStats = LogTime.getLineStats(document, editor);
-                    LogTime.appendHeartbeat(file, project, false, lineStats);
-                }
+            ApplicationManager.getApplication().invokeLater(() -> {
+                LineStats lineStats = LogTime.getLineStats(document, editor);
+                LogTime.appendHeartbeat(file, project, false, lineStats);
             });
         } catch(Exception e) {
             LogTime.debugException(e);

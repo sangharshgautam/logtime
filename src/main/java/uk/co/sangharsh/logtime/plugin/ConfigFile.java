@@ -9,6 +9,7 @@ Website:     https://logtime.com/
 package uk.co.sangharsh.logtime.plugin;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 public class ConfigFile {
     private static final String fileName = ".logtime.cfg";
@@ -22,11 +23,11 @@ public class ConfigFile {
 
     private static String getConfigFilePath(boolean internal) {
         if (ConfigFile.cachedHomeFolder == null) {
-            String logtimeHome = System.getenv("WAKATIME_HOME");
+            String logtimeHome = System.getenv("LOGTIME_HOME");
             if (logtimeHome != null && !logtimeHome.trim().isEmpty()) {
                 File folder = new File(logtimeHome.trim());
                 ConfigFile.cachedHomeFolder = folder.getAbsolutePath();
-                LogTime.log.debug("Using $WAKATIME_HOME for config folder: " + ConfigFile.cachedHomeFolder);
+                LogTime.log.debug("Using $LOGTIME_HOME for config folder: " + ConfigFile.cachedHomeFolder);
                 if (internal) {
                     return new File(new File(ConfigFile.cachedHomeFolder, ".logtime"), internalFileName).getAbsolutePath();
                 }
@@ -145,14 +146,16 @@ public class ConfigFile {
             parent.mkdirs();
         }
         try {
-            writer = new PrintWriter(file, "UTF-8");
+            writer = new PrintWriter(file, StandardCharsets.UTF_8);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
+        } catch (IOException e){
+            e.printStackTrace();
         }
         if (writer != null) {
-            writer.print(contents.toString());
+            writer.print(contents);
             writer.close();
         }
     }

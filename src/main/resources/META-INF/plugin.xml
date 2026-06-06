@@ -48,7 +48,7 @@
 16.0.1 (2026-04-20)<br />
 ++++++++++++++++++<br />
 <br />
-- Use WAKATIME_HOME env var. #316<br />
+- Use LOGTIME_HOME env var. #316<br />
 <br />
 <br />
 16.0.0 (2026-03-24)<br />
@@ -533,7 +533,7 @@
 9.3.0 (2018-10-23)<br />
 ++++++++++++++++++<br />
 <br />
-- Use WAKATIME_HOME to define config file location. #110<br />
+- Use LOGTIME_HOME to define config file location. #110<br />
 <br />
 <br />
 9.2.3 (2018-10-15)<br />
@@ -570,13 +570,13 @@
 9.0.3 (2018-03-18)<br />
 ++++++++++++++++++<br />
 <br />
-- Prevent NullPointerException when reading WAKATIME_HOME env variable.<br />
+- Prevent NullPointerException when reading LOGTIME_HOME env variable.<br />
 <br />
 <br />
 9.0.2 (2018-03-18)<br />
 ++++++++++++++++++<br />
 <br />
-- Support for WAKATIME_HOME env variable. #96<br />
+- Support for LOGTIME_HOME env variable. #96<br />
 <br />
 <br />
 9.0.1 (2017-03-18)<br />
