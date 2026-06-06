@@ -139,7 +139,7 @@ jobs:
 
       # Run Verify Plugin task and IntelliJ Plugin Verifier tool
       - name: Run Plugin Verification tasks
-        run: ./gradlew verifyPlugin --no-build-cache
+        run: ./gradlew verifyPlugin --no-build-cache -Dorg.gradle.parallel=false -Dorg.gradle.workers.max=1
 
       # Collect Plugin Verifier Result
       - name: Collect Plugin Verifier Result
