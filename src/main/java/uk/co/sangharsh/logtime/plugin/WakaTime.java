@@ -87,10 +87,10 @@ public class WakaTime implements ApplicationComponent {
     public void initComponent() {
         try {
             // support older IDE versions with deprecated PluginManager
-            VERSION = PluginManager.getPlugin(PluginId.getId("com.wakatime.intellij.plugin")).getVersion();
+            VERSION = PluginManager.getPlugin(PluginId.getId("uk.co.sangharsh.logtime.plugin")).getVersion();
         } catch (Exception e) {
             // use PluginManagerCore if PluginManager deprecated
-            VERSION = PluginManagerCore.getPlugin(PluginId.getId("com.wakatime.intellij.plugin")).getVersion();
+            VERSION = PluginManagerCore.getPlugin(PluginId.getId("uk.co.sangharsh.logtime.plugin")).getVersion();
         }
         log.info("Initializing WakaTime plugin v" + VERSION + " (https://wakatime.com/)");
         //System.out.println("Initializing WakaTime plugin v" + VERSION + " (https://wakatime.com/)");
