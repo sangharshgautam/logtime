@@ -56,7 +56,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
-public class LogTime implements ApplicationComponent {
+public class LogTime implements Disposable {
 
     public static final BigDecimal FREQUENCY = new BigDecimal(2 * 60); // max secs between heartbeats for continuous coding
     public static final Logger log = Logger.getInstance("LogTime");
@@ -84,9 +84,6 @@ public class LogTime implements ApplicationComponent {
     private static ScheduledFuture<?> scheduledFixture;
 
     public LogTime() {
-    }
-
-    public void initComponent() {
         PluginId pluginId = PluginId.getId("uk.co.sangharsh.logtime.plugin");
         ClassLoader classLoader = LogTime.class.getClassLoader();
 
@@ -192,7 +189,8 @@ public class LogTime implements ApplicationComponent {
         });
     }
 
-    public void disposeComponent() {
+    @Override
+    public void dispose() {
         try {
             connection.disconnect();
         } catch(Exception e) { }
