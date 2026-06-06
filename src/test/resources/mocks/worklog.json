@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/rest/api/2/issue/LT-12345/worklog"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "status": "success",
+      "message": "Worklog created successfully"
+    }
+  }
+}
