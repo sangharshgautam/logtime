@@ -11,7 +11,6 @@ package uk.co.sangharsh.logtime.plugin;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.ide.plugins.cl.PluginAwareClassLoader;
 import com.intellij.openapi.extensions.PluginDescriptor;
-import com.intellij.util.net.HttpConfigurable;
 import uk.co.sangharsh.logtime.plugin.listener.*;
 import uk.co.sangharsh.logtime.plugin.service.JiraDurationUtils;
 import uk.co.sangharsh.logtime.plugin.service.JiraService;
@@ -49,9 +48,11 @@ import uk.co.sangharsh.logtime.plugin.service.TimeSpent;
 import java.awt.*;
 import java.io.*;
 import java.math.BigDecimal;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
@@ -645,31 +646,36 @@ public class LogTime implements ApplicationComponent {
     }
 
     private static String getBuiltinProxy() {
-        HttpConfigurable config = HttpConfigurable.getInstance();
 
-        if (!config.isHttpProxyEnabledForUrl("https://api.wakatime.com")) return null;
+        try{
+            URI targetUri = new URI("https://api.wakatime.com");
+            // 2. Query the platform's active ProxySelector
+            List<Proxy> proxies = ProxySelector.getDefault().select(targetUri);
 
-        String host = config.PROXY_HOST;
-        if (host != null) {
-            String auth = "";
-            String protocol = config.PROXY_TYPE_IS_SOCKS ? "socks5://" : "https://";
+            for (Proxy proxy : proxies) {
+                if (proxy.type() == Proxy.Type.DIRECT) {
+                    System.out.println("Direct connection (No Proxy for this URI)");
+                } else if (proxy.type() == Proxy.Type.HTTP || proxy.type() == Proxy.Type.SOCKS) {
+                    InetSocketAddress addr = (InetSocketAddress) proxy.address();
 
-            String user = null;
-            try {
-                user = config.getProxyLogin();
-                if (user != null) {
-                    auth = String.format("%s:%s@", user, config.getPlainProxyPassword());
+                    String host = addr.getHostString();
+                    String auth = "";
+                    String protocol = proxy.type() == Proxy.Type.SOCKS ? "socks5://" : "https://";
+
+                    int port = addr.getPort();
+                    String type = proxy.type().name(); // "HTTP" or "SOCKS"
+
+                    System.out.println("Use Proxy -> Type: " + type + ", Host: " + host + ", Port: " + port);
+                    String url = protocol + auth + host;
+                    if (port > 0) {
+                        url += String.format(":%d", port);
+                    }
+                    return url;
                 }
-            } catch (NoSuchMethodError e) { }
-
-            String url = protocol + auth + host;
-            if (config.PROXY_PORT > 0) {
-                url += String.format(":%d", config.PROXY_PORT);
             }
-
-            return url;
+        }catch (URISyntaxException e){
+            e.printStackTrace();
         }
-
         return null;
     }
 
