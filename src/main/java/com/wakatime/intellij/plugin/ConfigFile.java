@@ -16,6 +16,7 @@ public class ConfigFile {
     private static final String defaultDashboardUrl = "https://wakatime.com/dashboard";
     private static String cachedHomeFolder = null;
     private static String _api_key = "";
+    private static String _jira_url = "";
     private static String _dashboard_url = "";
     private static boolean _usingVaultCmd = false;
 
@@ -177,6 +178,27 @@ public class ConfigFile {
         ConfigFile._api_key = apiKey;
         return apiKey;
     }
+    public static String getJiraUrl() {
+        if (ConfigFile._usingVaultCmd) {
+            return "";
+        }
+        if (!ConfigFile._jira_url.equals("")) {
+            return ConfigFile._jira_url;
+        }
+
+        String jiraUrl = get("settings", "jira_url", false);
+        if (jiraUrl == null) {
+            String vaultCmd = get("settings", "api_key_vault_cmd", false);
+            if (vaultCmd != null && !vaultCmd.trim().equals("")) {
+                ConfigFile._usingVaultCmd = true;
+                return "";
+            }
+            jiraUrl = "";
+        }
+
+        ConfigFile._jira_url = jiraUrl;
+        return jiraUrl;
+    }
 
     public static boolean usingVaultCmd() {
         return ConfigFile._usingVaultCmd;
@@ -185,6 +207,10 @@ public class ConfigFile {
     public static void setApiKey(String apiKey) {
         set("settings", "api_key", false, apiKey);
         ConfigFile._api_key = apiKey;
+    }
+    public static void setJiraUrl(String jiraUrl) {
+        set("settings", "jira_url", false, jiraUrl);
+        ConfigFile._jira_url = jiraUrl;
     }
 
     public static String getDashboardUrl() {

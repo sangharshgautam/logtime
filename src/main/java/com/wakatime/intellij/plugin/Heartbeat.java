@@ -23,4 +23,5 @@ public class Heartbeat {
     public String project;
     public String language;
     public Boolean isBuilding;
+    public Long timePassed;
 }

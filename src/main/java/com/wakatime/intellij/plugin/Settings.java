@@ -12,6 +12,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.ValidationInfo;
 import org.jetbrains.annotations.Nullable;
+import uk.co.sangharsh.logtime.intellij.plugin.service.UrlValidator;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,6 +20,9 @@ import java.util.UUID;
 
 public class Settings extends DialogWrapper {
     private final JPanel panel;
+    private final JLabel jiraUrlLabel;
+    private final JTextField jiraUrl;
+
     private final JLabel apiKeyLabel;
     private final JTextField apiKey;
     private final JLabel proxyLabel;
@@ -34,6 +38,12 @@ public class Settings extends DialogWrapper {
         setOKButtonText("Save");
         panel = new JPanel();
         panel.setLayout(new GridLayout(0,2));
+
+        jiraUrlLabel = new JLabel("Jira Url:", JLabel.CENTER);
+        panel.add(jiraUrlLabel);
+        jiraUrl = new JTextField(36);
+        jiraUrl.setText(ConfigFile.getJiraUrl());
+        panel.add(jiraUrl);
 
         apiKeyLabel = new JLabel("API key:", JLabel.CENTER);
         panel.add(apiKeyLabel);
@@ -79,12 +89,17 @@ public class Settings extends DialogWrapper {
         } catch (Exception e) {
             return new ValidationInfo("Invalid api key.");
         }
+        boolean isValidUrl = UrlValidator.isValidURL(jiraUrl.getText());
+        if(!isValidUrl){
+            return new ValidationInfo("Jira Url is not valid.");
+        }
         return null;
     }
 
     @Override
     public void doOKAction() {
         ConfigFile.setApiKey(apiKey.getText());
+        ConfigFile.setJiraUrl(jiraUrl.getText());
         ConfigFile.set("settings", "proxy", false, proxy.getText());
         ConfigFile.set("settings", "debug", false, debug.isSelected() ? "true" : "false");
         ConfigFile.set("settings", "status_bar_enabled", false, statusBar.isSelected() ? "true" : "false");

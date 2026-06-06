@@ -6,7 +6,7 @@ License:     BSD, see LICENSE for more details.
 Website:     https://wakatime.com/
 ===========================================================*/
 
-package com.wakatime.intellij.plugin;
+package com.wakatime.intellij.plugin.listener;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
@@ -14,6 +14,8 @@ import com.intellij.openapi.editor.event.EditorMouseEvent;
 import com.intellij.openapi.editor.event.EditorMouseListener;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.wakatime.intellij.plugin.LineStats;
+import com.wakatime.intellij.plugin.WakaTime;
 
 public class CustomEditorMouseListener implements EditorMouseListener {
     @Override

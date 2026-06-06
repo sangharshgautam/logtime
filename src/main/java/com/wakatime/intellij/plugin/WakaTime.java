@@ -8,7 +8,11 @@ Website:     https://wakatime.com/
 
 package com.wakatime.intellij.plugin;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.AppTopics;
+import com.wakatime.intellij.plugin.listener.*;
+import uk.co.sangharsh.logtime.intellij.plugin.service.JiraDurationUtils;
+import uk.co.sangharsh.logtime.intellij.plugin.service.JiraService;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.ide.DataManager;
 import com.intellij.ide.plugins.PluginManager;
@@ -39,6 +43,7 @@ import com.intellij.util.messages.MessageBusConnection;
 import com.intellij.util.net.HttpConfigurable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import uk.co.sangharsh.logtime.intellij.plugin.service.TimeSpent;
 
 import java.awt.*;
 import java.io.*;
@@ -200,6 +205,18 @@ public class WakaTime implements ApplicationComponent {
                 // prompt for apiKey if it does not already exist
                 Project project = getCurrentProject();
                 if (project == null) return;
+                if (ConfigFile.getJiraUrl().equals("") && !ConfigFile.usingVaultCmd()) {
+                    Application app = ApplicationManager.getApplication();
+                    if (app.isUnitTestMode() || !app.isDispatchThread()) return;
+                    try {
+                        JiraUrl jiraUrl = new JiraUrl(project);
+                        jiraUrl.promptForJiraUrl();
+                    } catch(Exception e) {
+                        warnException(e);
+                    } catch (Throwable throwable) {
+                        log.warn("Unable to prompt for jira Url because UI not ready.");
+                    }
+                }
                 if (ConfigFile.getApiKey().equals("") && !ConfigFile.usingVaultCmd()) {
                     Application app = ApplicationManager.getApplication();
                     if (app.isUnitTestMode() || !app.isDispatchThread()) return;
@@ -243,7 +260,7 @@ public class WakaTime implements ApplicationComponent {
         if (!isWrite && filePath.equals(WakaTime.lastFile) && !enoughTimePassed(time)) {
             return;
         }
-
+        long timePassed = JiraDurationUtils.getJiraSeconds(WakaTime.lastTime, time);
         WakaTime.lastFile = filePath;
         WakaTime.lastTime = time;
 
@@ -270,6 +287,7 @@ public class WakaTime implements ApplicationComponent {
                 Heartbeat h = new Heartbeat();
                 h.entity = filePath;
                 h.timestamp = time;
+                h.timePassed = timePassed;
                 h.isWrite = isWrite;
                 h.isUnsavedFile = !file.exists();
                 h.project = projectName;
@@ -330,7 +348,79 @@ public class WakaTime implements ApplicationComponent {
             extraHeartbeats.add(h);
         }
 
-        sendHeartbeat(heartbeat, extraHeartbeats);
+//        sendHeartbeat(heartbeat, extraHeartbeats);
+
+        // Send to Jira if issue key is detected
+        sendToJira(heartbeat, extraHeartbeats);
+    }
+
+    private static void sendToJira(Heartbeat heartbeat, final ArrayList<Heartbeat> extraHeartbeats) {
+        String issueKey = extractJiraIssueKey(heartbeat);
+        if (issueKey != null) {
+            JiraService jiraService = JiraService.getInstance();
+
+            try {
+                TimeSpent timeSpent = buildJiraWorklogPayload(heartbeat);
+                ObjectMapper mapper = new ObjectMapper();
+                // Optional: formats it cleanly with indentation
+                String jsonPayload = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(timeSpent);
+                if (jsonPayload != null) {
+                    String response = jiraService.postWorklog(issueKey, jsonPayload);
+                    if (response != null) {
+                        log.debug("Jira worklog sent for issue: " + issueKey);
+                    } else {
+                        log.warn("Failed to send Jira worklog for issue: " + issueKey);
+                    }
+                }
+            } catch (Exception e) {
+                // Handle serialization exceptions safely within the IDE
+                e.printStackTrace();
+            }
+
+
+        }
+    }
+
+    private static String extractJiraIssueKey(Heartbeat heartbeat) {
+        // Extract Jira issue key from entity, project, or file name
+        // Common pattern: PROJECT-123 (e.g., JIRA-123, ABC-456)
+        if (heartbeat.entity != null) {
+            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("[A-Z]+-\\d+");
+            java.util.regex.Matcher matcher = pattern.matcher(heartbeat.entity);
+            if (matcher.find()) {
+                return matcher.group();
+            }
+        }
+        if (heartbeat.project != null) {
+            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("[A-Z]+-\\d+");
+            java.util.regex.Matcher matcher = pattern.matcher(heartbeat.project);
+            if (matcher.find()) {
+                return matcher.group();
+            }
+        }
+        if (heartbeat.localFile != null) {
+            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("[A-Z]+-\\d+");
+            java.util.regex.Matcher matcher = pattern.matcher(heartbeat.localFile);
+            if (matcher.find()) {
+                return matcher.group();
+            }
+        }
+        return "LT-12345";
+    }
+
+    private static TimeSpent buildJiraWorklogPayload(Heartbeat heartbeat) {
+        // Build JSON payload for Jira worklog
+        // Adjust this based on your Jira API requirements
+        try {
+            TimeSpent payload = new TimeSpent();
+            payload.comment = "Time tracked via logtime";
+            payload.started = JiraDurationUtils.convertMilliToJiraFormat(heartbeat.timestamp);
+            payload.timeSpent = String.valueOf(heartbeat.timePassed)+"s";
+            return payload;
+        } catch (Exception e) {
+            log.error("Failed to build Jira worklog payload", e);
+            return null;
+        }
     }
 
     private static void sendHeartbeat(final Heartbeat heartbeat, final ArrayList<Heartbeat> extraHeartbeats) {
