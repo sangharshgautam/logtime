@@ -1,4 +1,4 @@
-package com.wakatime.intellij.plugin;
+package uk.co.sangharsh.logtime.plugin;
 
 import javax.net.ssl.X509TrustManager;
 import java.security.cert.CertificateException;

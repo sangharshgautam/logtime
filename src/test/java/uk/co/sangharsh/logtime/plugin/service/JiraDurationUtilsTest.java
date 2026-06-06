@@ -1,4 +1,4 @@
-package uk.co.sangharsh.logtime.intellij.plugin.service;
+package uk.co.sangharsh.logtime.plugin.service;
 
 import org.junit.Assert;
 import org.junit.Test;

@@ -6,13 +6,13 @@ License:     BSD, see LICENSE for more details.
 Website:     https://wakatime.com/
 ===========================================================*/
 
-package com.wakatime.intellij.plugin;
+package uk.co.sangharsh.logtime.plugin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.AppTopics;
-import com.wakatime.intellij.plugin.listener.*;
-import uk.co.sangharsh.logtime.intellij.plugin.service.JiraDurationUtils;
-import uk.co.sangharsh.logtime.intellij.plugin.service.JiraService;
+import uk.co.sangharsh.logtime.plugin.listener.*;
+import uk.co.sangharsh.logtime.plugin.service.JiraDurationUtils;
+import uk.co.sangharsh.logtime.plugin.service.JiraService;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.ide.DataManager;
 import com.intellij.ide.plugins.PluginManager;
@@ -43,7 +43,7 @@ import com.intellij.util.messages.MessageBusConnection;
 import com.intellij.util.net.HttpConfigurable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import uk.co.sangharsh.logtime.intellij.plugin.service.TimeSpent;
+import uk.co.sangharsh.logtime.plugin.service.TimeSpent;
 
 import java.awt.*;
 import java.io.*;
