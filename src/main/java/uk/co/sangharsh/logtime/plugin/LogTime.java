@@ -9,13 +9,14 @@ Website:     https://logtime.com/
 package uk.co.sangharsh.logtime.plugin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.intellij.ide.plugins.cl.PluginAwareClassLoader;
+import com.intellij.openapi.extensions.PluginDescriptor;
 import com.intellij.util.net.HttpConfigurable;
 import uk.co.sangharsh.logtime.plugin.listener.*;
 import uk.co.sangharsh.logtime.plugin.service.JiraDurationUtils;
 import uk.co.sangharsh.logtime.plugin.service.JiraService;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.ide.DataManager;
-import com.intellij.ide.plugins.PluginManagerCore;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.application.Application;
@@ -86,7 +87,15 @@ public class LogTime implements ApplicationComponent {
 
     public void initComponent() {
         PluginId pluginId = PluginId.getId("uk.co.sangharsh.logtime.plugin");
-        VERSION = PluginManagerCore.getPlugin(pluginId).getVersion();
+        ClassLoader classLoader = LogTime.class.getClassLoader();
+
+        if (classLoader instanceof PluginAwareClassLoader) {
+            // 2. Cast it and extract the descriptor safely
+            PluginDescriptor descriptor = ((PluginAwareClassLoader) classLoader).getPluginDescriptor();
+
+            // 3. Grab the version string!
+            VERSION = descriptor.getVersion();
+        }
         log.info("Initializing LogTime plugin v" + VERSION + " (https://logtime.com/)");
         //System.out.println("Initializing LogTime plugin v" + VERSION + " (https://logtime.com/)");
 
