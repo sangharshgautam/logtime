@@ -1,7 +1,7 @@
 /* ==========================================================
 File:        ApiKey.java
 Description: Prompts user for api key if it does not exist.
-Maintainer:  WakaTime <support@wakatime.com>
+Maintainer:  LogTime <support@wakatime.com>
 License:     BSD, see LICENSE for more details.
 Website:     https://wakatime.com/
 ===========================================================*/
@@ -32,11 +32,11 @@ public class ApiKey extends DialogWrapper {
 
     public ApiKey(@Nullable Project project) {
         super(project, true);
-        setTitle("WakaTime API Key");
+        setTitle("LogTime API Key");
         setOKButtonText("Save");
         panel = new JPanel();
         panel.setLayout(new GridLayout(0,1));
-        label  = new JLabel("Enter your WakaTime API key:", JLabel.CENTER);
+        label  = new JLabel("Enter your LogTime API key:", JLabel.CENTER);
         panel.add(label);
         input = new JTextField(36);
         panel.add(input);
@@ -73,7 +73,7 @@ public class ApiKey extends DialogWrapper {
 
     @Override
     public void doCancelAction() {
-        WakaTime.cancelApiKey = true;
+        LogTime.cancelApiKey = true;
         super.doCancelAction();
     }
 

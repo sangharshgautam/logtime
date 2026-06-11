@@ -1,7 +1,7 @@
 /* ==========================================================
 File:        Heartbeat.java
 Description: Stores coding activity waiting to be sent to the api.
-Maintainer:  WakaTime <support@wakatime.com>
+Maintainer:  LogTime <support@wakatime.com>
 License:     BSD, see LICENSE for more details.
 Website:     https://wakatime.com/
 ===========================================================*/

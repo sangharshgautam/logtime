@@ -1,7 +1,7 @@
 /* ==========================================================
 File:        ApiKey.java
 Description: Prompts user for api key if it does not exist.
-Maintainer:  WakaTime <support@wakatime.com>
+Maintainer:  LogTime <support@wakatime.com>
 License:     BSD, see LICENSE for more details.
 Website:     https://wakatime.com/
 ===========================================================*/
@@ -68,7 +68,7 @@ public class JiraUrl extends DialogWrapper {
 
     @Override
     public void doCancelAction() {
-        WakaTime.cancelApiKey = true;
+        LogTime.cancelApiKey = true;
         super.doCancelAction();
     }
 

@@ -1,7 +1,7 @@
 /* ==========================================================
 File:        ConfigFile.java
 Description: Read and write settings from the INI config file.
-Maintainer:  WakaTime <support@wakatime.com>
+Maintainer:  LogTime <support@wakatime.com>
 License:     BSD, see LICENSE for more details.
 Website:     https://wakatime.com/
 ===========================================================*/
@@ -26,14 +26,14 @@ public class ConfigFile {
             if (wakatimeHome != null && !wakatimeHome.trim().isEmpty()) {
                 File folder = new File(wakatimeHome.trim());
                 ConfigFile.cachedHomeFolder = folder.getAbsolutePath();
-                WakaTime.log.debug("Using $WAKATIME_HOME for config folder: " + ConfigFile.cachedHomeFolder);
+                LogTime.log.debug("Using $WAKATIME_HOME for config folder: " + ConfigFile.cachedHomeFolder);
                 if (internal) {
                     return new File(new File(ConfigFile.cachedHomeFolder, ".wakatime"), internalFileName).getAbsolutePath();
                 }
                 return new File(ConfigFile.cachedHomeFolder, fileName).getAbsolutePath();
             }
             ConfigFile.cachedHomeFolder = new File(System.getProperty("user.home")).getAbsolutePath();
-            WakaTime.log.debug("Using $HOME for config folder: " + ConfigFile.cachedHomeFolder);
+            LogTime.log.debug("Using $HOME for config folder: " + ConfigFile.cachedHomeFolder);
         }
         if (internal) {
             return new File(new File(ConfigFile.cachedHomeFolder, ".wakatime"), internalFileName).getAbsolutePath();

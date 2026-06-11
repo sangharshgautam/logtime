@@ -8,6 +8,6 @@ public class LogTimeStartupActivity implements StartupActivity.Background {
 
     @Override
     public void runActivity(@NotNull Project project) {
-        WakaTime.checkApiKey();
+        LogTime.checkApiKey();
     }
 }

@@ -1,7 +1,7 @@
 /* ==========================================================
-File:        WakaTime.java
+File:        LogTime.java
 Description: Automatic time tracking for JetBrains IDEs.
-Maintainer:  WakaTime <support@wakatime.com>
+Maintainer:  LogTime <support@wakatime.com>
 License:     BSD, see LICENSE for more details.
 Website:     https://wakatime.com/
 ===========================================================*/
@@ -54,10 +54,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
 
-public class WakaTime implements ApplicationComponent {
+public class LogTime implements ApplicationComponent {
 
     public static final BigDecimal FREQUENCY = new BigDecimal(2 * 60); // max secs between heartbeats for continuous coding
-    public static final Logger log = Logger.getInstance("WakaTime");
+    public static final Logger log = Logger.getInstance("LogTime");
 
     public static String VERSION;
     public static String IDE_NAME;
@@ -81,7 +81,7 @@ public class WakaTime implements ApplicationComponent {
     private static ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private static ScheduledFuture<?> scheduledFixture;
 
-    public WakaTime() {
+    public LogTime() {
     }
 
     public void initComponent() {
@@ -92,8 +92,8 @@ public class WakaTime implements ApplicationComponent {
             // use PluginManagerCore if PluginManager deprecated
             VERSION = PluginManagerCore.getPlugin(PluginId.getId("uk.co.sangharsh.logtime.plugin")).getVersion();
         }
-        log.info("Initializing WakaTime plugin v" + VERSION + " (https://wakatime.com/)");
-        //System.out.println("Initializing WakaTime plugin v" + VERSION + " (https://wakatime.com/)");
+        log.info("Initializing LogTime plugin v" + VERSION + " (https://wakatime.com/)");
+        //System.out.println("Initializing LogTime plugin v" + VERSION + " (https://wakatime.com/)");
 
         // Set runtime constants
         IDE_NAME = ApplicationNamesInfo.getInstance().getFullProductName().replaceAll(" ", "").toLowerCase();
@@ -113,7 +113,7 @@ public class WakaTime implements ApplicationComponent {
                 if (!Dependencies.isCLIInstalled()) {
                     log.info("Downloading and installing wakatime-cli...");
                     Dependencies.installCLI();
-                    WakaTime.READY = true;
+                    LogTime.READY = true;
                     log.info("Finished downloading and installing wakatime-cli.");
                 } else if (Dependencies.isCLIOld()) {
                     if (System.getenv("WAKATIME_CLI_LOCATION") != null && !System.getenv("WAKATIME_CLI_LOCATION").trim().isEmpty()) {
@@ -124,11 +124,11 @@ public class WakaTime implements ApplicationComponent {
                     } else {
                         log.info("Upgrading wakatime-cli ...");
                         Dependencies.installCLI();
-                        WakaTime.READY = true;
+                        LogTime.READY = true;
                         log.info("Finished upgrading wakatime-cli.");
                     }
                 } else {
-                    WakaTime.READY = true;
+                    LogTime.READY = true;
                     log.info("wakatime-cli is up to date.");
                 }
                 Dependencies.createSymlink(Dependencies.combinePaths(Dependencies.getResourcesLocation(), "wakatime-cli"), Dependencies.getCLILocation());
@@ -181,7 +181,7 @@ public class WakaTime implements ApplicationComponent {
         if (!DEBUG) return;
         ApplicationManager.getApplication().invokeLater(new Runnable(){
             public void run() {
-                Messages.showWarningDialog("Your IDE may respond slower. Disable debug mode from Tools -> WakaTime Settings.", "WakaTime Debug Mode Enabled");
+                Messages.showWarningDialog("Your IDE may respond slower. Disable debug mode from Tools -> LogTime Settings.", "LogTime Debug Mode Enabled");
             }
         });
     }
@@ -199,7 +199,7 @@ public class WakaTime implements ApplicationComponent {
     }
 
     public static void checkApiKey() {
-        if (WakaTime.cancelApiKey || ApiKey.isDialogOpened) return;
+        if (LogTime.cancelApiKey || ApiKey.isDialogOpened) return;
         ApplicationManager.getApplication().invokeLater(new Runnable(){
             public void run() {
                 // prompt for apiKey if it does not already exist
@@ -248,24 +248,24 @@ public class WakaTime implements ApplicationComponent {
             return;
         }
 
-        if (WakaTime.READY) {
+        if (LogTime.READY) {
             updateStatusBarText();
             if (project != null) {
                 StatusBar statusbar = WindowManager.getInstance().getStatusBar(project);
-                if (statusbar != null) statusbar.updateWidget("WakaTime");
+                if (statusbar != null) statusbar.updateWidget("LogTime");
             }
         }
 
-        final BigDecimal time = WakaTime.getCurrentTimestamp();
-        if (!isWrite && filePath.equals(WakaTime.lastFile) && !enoughTimePassed(time)) {
+        final BigDecimal time = LogTime.getCurrentTimestamp();
+        if (!isWrite && filePath.equals(LogTime.lastFile) && !enoughTimePassed(time)) {
             return;
         }
-        long timePassed = JiraDurationUtils.getJiraSeconds(WakaTime.lastTime, time);
-        WakaTime.lastFile = filePath;
-        WakaTime.lastTime = time;
+        long timePassed = JiraDurationUtils.getJiraSeconds(LogTime.lastTime, time);
+        LogTime.lastFile = filePath;
+        LogTime.lastTime = time;
 
         final String projectName = project != null ? project.getName() : null;
-        final String language = WakaTime.getLanguage(file);
+        final String language = LogTime.getLanguage(file);
 
         String localFile = null;
         if (file.getFileSystem().getProtocol().equals("cwm")) {
@@ -292,7 +292,7 @@ public class WakaTime implements ApplicationComponent {
                 h.isUnsavedFile = !file.exists();
                 h.project = projectName;
                 h.language = language;
-                h.isBuilding = WakaTime.isBuilding;
+                h.isBuilding = LogTime.isBuilding;
                 if (lineStats != null) {
                     h.lineCount = lineStats.lineCount;
                     h.lineNumber = lineStats.lineNumber;
@@ -306,7 +306,7 @@ public class WakaTime implements ApplicationComponent {
 
                 heartbeatsQueue.add(h);
 
-                if (WakaTime.isBuilding) setBuildTimeout();
+                if (LogTime.isBuilding) setBuildTimeout();
             }
         });
     }
@@ -315,21 +315,21 @@ public class WakaTime implements ApplicationComponent {
         AppExecutorUtil.getAppScheduledExecutorService().schedule(new Runnable() {
             @Override
             public void run() {
-                if (!WakaTime.isBuilding) return;
+                if (!LogTime.isBuilding) return;
                 Project project = getCurrentProject();
                 if (project == null) return;
-                if (!WakaTime.isProjectInitialized(project)) return;
-                VirtualFile file = WakaTime.getCurrentFile(project);
+                if (!LogTime.isProjectInitialized(project)) return;
+                VirtualFile file = LogTime.getCurrentFile(project);
                 if (file == null) return;
-                Document document = WakaTime.getCurrentDocument(project);
-                LineStats lineStats = WakaTime.getLineStats(file);
-                WakaTime.appendHeartbeat(file, project, false, lineStats);
+                Document document = LogTime.getCurrentDocument(project);
+                LineStats lineStats = LogTime.getLineStats(file);
+                LogTime.appendHeartbeat(file, project, false, lineStats);
             }
         }, 10, TimeUnit.SECONDS);
     }
 
     private static void processHeartbeatQueue() {
-        if (!WakaTime.READY) return;
+        if (!LogTime.READY) return;
         if (pluginString() == null) return;
 
         checkApiKey();
@@ -446,7 +446,7 @@ public class WakaTime implements ApplicationComponent {
                     warnException(e);
                 }
             }
-            if (WakaTime.DEBUG) {
+            if (LogTime.DEBUG) {
                 BufferedReader stdout = new BufferedReader(new
                         InputStreamReader(proc.getInputStream()));
                 BufferedReader stderr = new BufferedReader(new
@@ -465,7 +465,7 @@ public class WakaTime implements ApplicationComponent {
             warnException(e);
             if (Dependencies.isWindows() && e.toString().contains("Access is denied")) {
                 try {
-                    Messages.showWarningDialog("Microsoft Defender is blocking WakaTime. Please allow " + Dependencies.getCLILocation() + " to run so WakaTime can upload code stats to your dashboard.", "Error");
+                    Messages.showWarningDialog("Microsoft Defender is blocking LogTime. Please allow " + Dependencies.getCLILocation() + " to run so LogTime can upload code stats to your dashboard.", "Error");
                 } catch (Exception ex) { }
             }
         }
@@ -616,12 +616,12 @@ public class WakaTime implements ApplicationComponent {
             cmds.add("--category");
             cmds.add("building");
         }
-        if (WakaTime.METRICS)
+        if (LogTime.METRICS)
             cmds.add("--metrics");
 
         String proxy = getBuiltinProxy();
         if (proxy != null) {
-            WakaTime.log.info("built-in proxy will be used: " + proxy);
+            LogTime.log.info("built-in proxy will be used: " + proxy);
             cmds.add("--proxy");
             cmds.add(proxy);
         }
@@ -669,7 +669,7 @@ public class WakaTime implements ApplicationComponent {
     }
 
     public static boolean enoughTimePassed(BigDecimal currentTime) {
-        return WakaTime.lastTime.add(FREQUENCY).compareTo(currentTime) < 0;
+        return LogTime.lastTime.add(FREQUENCY).compareTo(currentTime) < 0;
     }
 
     public static boolean shouldLogFile(VirtualFile file) {
@@ -694,22 +694,22 @@ public class WakaTime implements ApplicationComponent {
 
     public static void setupConfigs() {
         String debug = ConfigFile.get("settings", "debug", false);
-        WakaTime.DEBUG = debug != null && debug.trim().equals("true");
+        LogTime.DEBUG = debug != null && debug.trim().equals("true");
         String metrics = ConfigFile.get("settings", "metrics", false);
-        WakaTime.METRICS = metrics != null && metrics.trim().equals("true");
+        LogTime.METRICS = metrics != null && metrics.trim().equals("true");
     }
 
     public static void setupStatusBar() {
         String statusBarVal = ConfigFile.get("settings", "status_bar_enabled", false);
-        WakaTime.STATUS_BAR = statusBarVal == null || !statusBarVal.trim().equals("false");
-        if (WakaTime.READY) {
+        LogTime.STATUS_BAR = statusBarVal == null || !statusBarVal.trim().equals("false");
+        if (LogTime.READY) {
             try {
                 updateStatusBarText();
                 Project project = getCurrentProject();
                 if (project == null) return;
                 StatusBar statusbar = WindowManager.getInstance().getStatusBar(project);
                 if (statusbar == null) return;
-                statusbar.updateWidget("WakaTime");
+                statusbar.updateWidget("LogTime");
             } catch (Exception e) {
                 warnException(e);
             }
@@ -719,7 +719,7 @@ public class WakaTime implements ApplicationComponent {
     public static void setLoggingLevel() {
         /*
         try {
-            if (WakaTime.DEBUG) {
+            if (LogTime.DEBUG) {
                 log.setLevel(LogLevel.DEBUG);
                 log.debug("Logging level set to DEBUG");
             } else {
@@ -753,7 +753,7 @@ public class WakaTime implements ApplicationComponent {
         Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
         if (editor == null) return null;
         Document document = editor.getDocument();
-        return WakaTime.getFile(document);
+        return LogTime.getFile(document);
     }
 
     public static Project getProject(Document document) {
@@ -783,7 +783,7 @@ public class WakaTime implements ApplicationComponent {
 
     public static LineStats getLineStats(@Nullable Document document, @Nullable Editor editor) {
         if (editor == null && document != null) {
-            Project project = WakaTime.getProject(document);
+            Project project = LogTime.getProject(document);
             if (project != null && project.isInitialized()) {
                 editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
             }
@@ -808,7 +808,7 @@ public class WakaTime implements ApplicationComponent {
             }
         }
 
-        return WakaTime.getLineStats(document);
+        return LogTime.getLineStats(document);
     }
 
     public static LineStats getLineStats(@Nullable Document document) {
@@ -825,7 +825,7 @@ public class WakaTime implements ApplicationComponent {
             return lineStats;
         }
 
-        return WakaTime.getLineStats(WakaTime.getFile(document));
+        return LogTime.getLineStats(LogTime.getFile(document));
     }
 
     public static LineStats getLineStats(@Nullable VirtualFile file) {
@@ -860,11 +860,11 @@ public class WakaTime implements ApplicationComponent {
 
         if (file == null) return new LineStats();
 
-        return WakaTime.lineStatsCache.get(file.getPath());
+        return LogTime.lineStatsCache.get(file.getPath());
     }
 
     public static void saveLineStats(Document document, LineStats lineStats) {
-        VirtualFile file = WakaTime.getFile(document);
+        VirtualFile file = LogTime.getFile(document);
         saveLineStats(file, lineStats);
     }
 
@@ -873,7 +873,7 @@ public class WakaTime implements ApplicationComponent {
     }
 
     public static void saveLineStats(Document document, LineStats lineStats, boolean updateLineChanges) {
-        VirtualFile file = WakaTime.getFile(document);
+        VirtualFile file = LogTime.getFile(document);
         saveLineStats(file, lineStats, updateLineChanges);
     }
 
@@ -884,13 +884,13 @@ public class WakaTime implements ApplicationComponent {
         if (updateLineChanges) {
             updateLineChanges(file, lineStats);
         }
-        WakaTime.lineStatsCache.put(file.getPath(), lineStats);
+        LogTime.lineStatsCache.put(file.getPath(), lineStats);
     }
 
     private static synchronized void updateLineChanges(@NotNull VirtualFile file, @NotNull LineStats lineStats) {
         String filePath = file.getPath();
         long now = lineStats.updatedAt != null ? lineStats.updatedAt : System.currentTimeMillis();
-        LineStats previous = WakaTime.lineStatsCache.get(filePath);
+        LineStats previous = LogTime.lineStatsCache.get(filePath);
         if (previous == null || previous.lineCount == null) {
             return;
         }
@@ -904,19 +904,19 @@ public class WakaTime implements ApplicationComponent {
 
         if (delta == 0) return;
 
-        Integer current = WakaTime.humanLineChanges.get(filePath);
-        WakaTime.humanLineChanges.put(filePath, (current != null ? current : 0) + delta);
+        Integer current = LogTime.humanLineChanges.get(filePath);
+        LogTime.humanLineChanges.put(filePath, (current != null ? current : 0) + delta);
     }
 
     private static synchronized Integer popHumanLineChanges(@NotNull String filePath) {
-        Integer lineChanges = WakaTime.humanLineChanges.remove(filePath);
-        Boolean hasHumanTyping = WakaTime.filesWithHumanTyping.remove(filePath);
+        Integer lineChanges = LogTime.humanLineChanges.remove(filePath);
+        Boolean hasHumanTyping = LogTime.filesWithHumanTyping.remove(filePath);
         if (!Boolean.TRUE.equals(hasHumanTyping)) return 0;
         return lineChanges;
     }
 
     public static synchronized void markFileWithHumanTyping(@NotNull VirtualFile file) {
-        WakaTime.filesWithHumanTyping.put(file.getPath(), true);
+        LogTime.filesWithHumanTyping.put(file.getPath(), true);
     }
 
     public static void openDashboardWebsite() {
@@ -927,8 +927,8 @@ public class WakaTime implements ApplicationComponent {
     private static BigDecimal todayTextTime = new BigDecimal(0);
 
     public static String getStatusBarText() {
-        if (!WakaTime.READY) return "";
-        if (!WakaTime.STATUS_BAR) return "";
+        if (!LogTime.READY) return "";
+        if (!LogTime.STATUS_BAR) return "";
         return todayText;
     }
 
@@ -977,7 +977,7 @@ public class WakaTime implements ApplicationComponent {
                     warnException(e);
                     if (Dependencies.isWindows() && e.toString().contains("Access is denied")) {
                         try {
-                            Messages.showWarningDialog("Microsoft Defender is blocking WakaTime. Please allow " + Dependencies.getCLILocation() + " to run so WakaTime can upload code stats to your dashboard.", "Error");
+                            Messages.showWarningDialog("Microsoft Defender is blocking LogTime. Please allow " + Dependencies.getCLILocation() + " to run so LogTime can upload code stats to your dashboard.", "Error");
                         } catch (Exception ex) { }
                     }
                 }
@@ -1032,6 +1032,6 @@ public class WakaTime implements ApplicationComponent {
 
     @NotNull
     public String getComponentName() {
-        return "WakaTime";
+        return "LogTime";
     }
 }

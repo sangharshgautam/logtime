@@ -1,7 +1,7 @@
 /* ==========================================================
 File:        PluginMenu.java
-Description: Adds a WakaTime item to the File menu.
-Maintainer:  WakaTime <support@wakatime.com>
+Description: Adds a LogTime item to the File menu.
+Maintainer:  LogTime <support@wakatime.com>
 License:     BSD, see LICENSE for more details.
 Website:     https://wakatime.com/
 ===========================================================*/
@@ -14,8 +14,8 @@ import com.intellij.openapi.project.Project;
 
 public class PluginMenu extends AnAction {
     public PluginMenu() {
-        super("WakaTime Settings");
-        // super("WakaTime Settings", "", IconLoader.getIcon("/Mypackage/icon.png"));
+        super("LogTime Settings");
+        // super("LogTime Settings", "", IconLoader.getIcon("/Mypackage/icon.png"));
     }
     public void actionPerformed(AnActionEvent e) {
         Project project = e.getProject();

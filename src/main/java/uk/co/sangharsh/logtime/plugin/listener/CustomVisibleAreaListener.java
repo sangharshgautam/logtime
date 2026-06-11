@@ -1,7 +1,7 @@
 /* ==========================================================
 File:        CustomEditorMouseMotionListener.java
 Description: Logs time from mouse motion events.
-Maintainer:  WakaTime <support@wakatime.com>
+Maintainer:  LogTime <support@wakatime.com>
 License:     BSD, see LICENSE for more details.
 Website:     https://wakatime.com/
 ===========================================================*/
@@ -15,27 +15,27 @@ import com.intellij.openapi.editor.event.VisibleAreaListener;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import uk.co.sangharsh.logtime.plugin.LineStats;
-import uk.co.sangharsh.logtime.plugin.WakaTime;
+import uk.co.sangharsh.logtime.plugin.LogTime;
 
 import java.awt.*;
 
 public class CustomVisibleAreaListener implements VisibleAreaListener {
     @Override
     public void visibleAreaChanged(VisibleAreaEvent visibleAreaEvent) {
-        // WakaTime.log.debug("visibleAreaChanged event");
+        // LogTime.log.debug("visibleAreaChanged event");
         try {
             if (!didChange(visibleAreaEvent)) return;
-            if (!WakaTime.isAppActive()) return;
+            if (!LogTime.isAppActive()) return;
             Document document = visibleAreaEvent.getEditor().getDocument();
-            VirtualFile file = WakaTime.getFile(document);
+            VirtualFile file = LogTime.getFile(document);
             if (file == null) return;
             Project project = visibleAreaEvent.getEditor().getProject();
-            if (!WakaTime.isProjectInitialized(project)) return;
+            if (!LogTime.isProjectInitialized(project)) return;
             Editor editor = visibleAreaEvent.getEditor();
-            LineStats lineStats = WakaTime.getLineStats(document, editor);
-            WakaTime.appendHeartbeat(file, project, false, lineStats);
+            LineStats lineStats = LogTime.getLineStats(document, editor);
+            LogTime.appendHeartbeat(file, project, false, lineStats);
         } catch(Exception e) {
-            WakaTime.debugException(e);
+            LogTime.debugException(e);
         }
     }
 
