@@ -1,9 +1,9 @@
-package uk.co.sangharsh.logtime.intellij.plugin.service;
+package uk.co.sangharsh.logtime.plugin.service;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.Service;
 import com.intellij.util.io.HttpRequests;
-import com.wakatime.intellij.plugin.ConfigFile;
+import uk.co.sangharsh.logtime.plugin.ConfigFile;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;

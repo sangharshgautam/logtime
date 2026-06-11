@@ -6,13 +6,13 @@ License:     BSD, see LICENSE for more details.
 Website:     https://wakatime.com/
 ===========================================================*/
 
-package com.wakatime.intellij.plugin;
+package uk.co.sangharsh.logtime.plugin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.AppTopics;
-import com.wakatime.intellij.plugin.listener.*;
-import uk.co.sangharsh.logtime.intellij.plugin.service.JiraDurationUtils;
-import uk.co.sangharsh.logtime.intellij.plugin.service.JiraService;
+import uk.co.sangharsh.logtime.plugin.listener.*;
+import uk.co.sangharsh.logtime.plugin.service.JiraDurationUtils;
+import uk.co.sangharsh.logtime.plugin.service.JiraService;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.ide.DataManager;
 import com.intellij.ide.plugins.PluginManager;
@@ -43,7 +43,7 @@ import com.intellij.util.messages.MessageBusConnection;
 import com.intellij.util.net.HttpConfigurable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import uk.co.sangharsh.logtime.intellij.plugin.service.TimeSpent;
+import uk.co.sangharsh.logtime.plugin.service.TimeSpent;
 
 import java.awt.*;
 import java.io.*;
@@ -87,10 +87,10 @@ public class WakaTime implements ApplicationComponent {
     public void initComponent() {
         try {
             // support older IDE versions with deprecated PluginManager
-            VERSION = PluginManager.getPlugin(PluginId.getId("com.wakatime.intellij.plugin")).getVersion();
+            VERSION = PluginManager.getPlugin(PluginId.getId("uk.co.sangharsh.logtime.plugin")).getVersion();
         } catch (Exception e) {
             // use PluginManagerCore if PluginManager deprecated
-            VERSION = PluginManagerCore.getPlugin(PluginId.getId("com.wakatime.intellij.plugin")).getVersion();
+            VERSION = PluginManagerCore.getPlugin(PluginId.getId("uk.co.sangharsh.logtime.plugin")).getVersion();
         }
         log.info("Initializing WakaTime plugin v" + VERSION + " (https://wakatime.com/)");
         //System.out.println("Initializing WakaTime plugin v" + VERSION + " (https://wakatime.com/)");
@@ -413,7 +413,7 @@ public class WakaTime implements ApplicationComponent {
         // Adjust this based on your Jira API requirements
         try {
             TimeSpent payload = new TimeSpent();
-            payload.comment = "Time tracked via logtime";
+            payload.comment = heartbeat.entity;
             payload.started = JiraDurationUtils.convertMilliToJiraFormat(heartbeat.timestamp);
             payload.timeSpent = String.valueOf(heartbeat.timePassed)+"s";
             return payload;

@@ -6,13 +6,13 @@ License:     BSD, see LICENSE for more details.
 Website:     https://wakatime.com/
 ===========================================================*/
 
-package com.wakatime.intellij.plugin;
+package uk.co.sangharsh.logtime.plugin;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.ValidationInfo;
 import org.jetbrains.annotations.Nullable;
-import uk.co.sangharsh.logtime.intellij.plugin.service.UrlValidator;
+import uk.co.sangharsh.logtime.plugin.service.UrlValidator;
 
 import javax.swing.*;
 import java.awt.*;

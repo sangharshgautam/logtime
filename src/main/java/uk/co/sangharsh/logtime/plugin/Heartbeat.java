@@ -6,7 +6,7 @@ License:     BSD, see LICENSE for more details.
 Website:     https://wakatime.com/
 ===========================================================*/
 
-package com.wakatime.intellij.plugin;
+package uk.co.sangharsh.logtime.plugin;
 
 import java.math.BigDecimal;
 

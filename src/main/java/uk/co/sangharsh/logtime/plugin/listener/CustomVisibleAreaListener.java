@@ -6,7 +6,7 @@ License:     BSD, see LICENSE for more details.
 Website:     https://wakatime.com/
 ===========================================================*/
 
-package com.wakatime.intellij.plugin.listener;
+package uk.co.sangharsh.logtime.plugin.listener;
 
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
@@ -14,8 +14,8 @@ import com.intellij.openapi.editor.event.VisibleAreaEvent;
 import com.intellij.openapi.editor.event.VisibleAreaListener;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.wakatime.intellij.plugin.LineStats;
-import com.wakatime.intellij.plugin.WakaTime;
+import uk.co.sangharsh.logtime.plugin.LineStats;
+import uk.co.sangharsh.logtime.plugin.WakaTime;
 
 import java.awt.*;
 

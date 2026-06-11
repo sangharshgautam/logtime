@@ -1,8 +1,9 @@
-package uk.co.sangharsh.logtime.intellij.plugin.service;
+package uk.co.sangharsh.logtime.plugin.service;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -15,12 +16,15 @@ public class JiraDurationUtils {
         if (milliTime == null) return null;
 
         // 1. Extract the long millisecond value safely
-        long millis = milliTime.longValue();
+        long millis = milliTime.longValue()*1000;
 
-        // 2. Map the absolute timeline point to UTC (or change to your local ZoneOffset)
-        OffsetDateTime dateTime = OffsetDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneOffset.UTC);
+        // 2. Define the target time zone
+        ZoneId localZone = ZoneId.systemDefault();
 
-        // 3. Format to the strict payload string
+        // 3. Map the absolute timeline point to UTC (or change to your local ZoneOffset)
+        OffsetDateTime dateTime = OffsetDateTime.ofInstant(Instant.ofEpochMilli(millis), localZone);
+
+        // 4. Format to the strict payload string
         return dateTime.format(JIRA_FORMATTER);
     }
 
