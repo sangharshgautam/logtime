@@ -405,7 +405,7 @@ public class WakaTime implements ApplicationComponent {
                 return matcher.group();
             }
         }
-        return "LT-12345";
+        return "IT-1234";
     }
 
     private static TimeSpent buildJiraWorklogPayload(Heartbeat heartbeat) {
