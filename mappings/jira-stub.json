@@ -1,0 +1,23 @@
+{
+  "request": {
+    "urlPattern": "/rest/api/2/issue/([A-Z]+-[0-9]+)/worklog",
+    "method": "POST"
+  },
+  "response": {
+    "status": 201,
+    "jsonBody": {
+      "id": "10011",
+      "issueKey": "ABC",
+      "comment": "Worklog successfully added to issue ABC.",
+      "timeSpent": "2h",
+      "timeSpentSeconds": 7200,
+      "created": "ABVC"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "transformers": [
+      "response-template"
+    ]
+  }
+}

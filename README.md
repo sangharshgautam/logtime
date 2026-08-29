@@ -1,45 +1,84 @@
-# logtime
+# LogTime
+
+Automatic time tracking for JetBrains IDEs that logs your coding sessions as Jira worklogs.
 
 ![Build](https://github.com/sangharshgautam/logtime/workflows/Build/badge.svg)
-[![Version](https://img.shields.io/jetbrains/plugin/v/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
-[![Downloads](https://img.shields.io/jetbrains/plugin/d/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
 
-## Template ToDo list
-- [x] Create a new [IntelliJ Platform Plugin Template][template] project.
-- [ ] Get familiar with the [template documentation][template].
-- [ ] Adjust the [group](./gradle.properties), as well as the [id](./src/main/resources/META-INF/plugin.xml), [name](./src/main/resources/META-INF/plugin.xml), and [sources package](./src/main/kotlin).
-- [ ] Adjust the plugin [description](./src/main/resources/META-INF/plugin.xml) (see [Tips][docs:plugin-description]) and this README to describe what your plugin does.
-- [ ] Review the [Legal Agreements](https://plugins.jetbrains.com/docs/marketplace/legal-agreements.html?from=IJPluginTemplate).
-- [ ] [Publish a plugin manually](https://plugins.jetbrains.com/docs/intellij/publishing-plugin.html?from=IJPluginTemplate) for the first time.
-- [ ] Set the `MARKETPLACE_ID` in the above README badges. You can obtain it once the plugin is published to JetBrains Marketplace.
-- [ ] Set the [Plugin Signing](https://plugins.jetbrains.com/docs/intellij/plugin-signing.html?from=IJPluginTemplate) related [secrets](https://github.com/JetBrains/intellij-platform-plugin-template#environment-variables).
-- [ ] Set the [Deployment Token](https://plugins.jetbrains.com/docs/marketplace/plugin-upload.html?from=IJPluginTemplate).
-- [ ] Click the <kbd>Watch</kbd> button on the top of the [IntelliJ Platform Plugin Template][template] to be notified about releases containing new features and fixes.
+## What it does
 
-This Fancy IntelliJ Platform Plugin is going to be your implementation of the brilliant ideas that you have.
+LogTime runs silently in the background while you work. It records heartbeats as you edit files,
+grouping them into uninterrupted coding sessions per issue, and then posts those sessions to Jira
+as worklogs — no timers, no manual entries.
+
+- Tracks time and edits per project, per file, per issue.
+- Never blocks your work: persistence is crash-safe and runs off the UI thread.
+- Only removes a session from its durable queue after Jira confirms the worklog POST.
+
+## How it works
+
+1. Every edit/save produces a **heartbeat** (project, file, cursor position, timestamp).
+2. Heartbeats are appended to a durable JSONL queue at `~/.logtime/heartbeats.jsonl` — the single
+   source of truth, so nothing is lost on crash or restart.
+3. Heartbeats are merged into **sessions**: consecutive heartbeats within 5 minutes of each other
+   are grouped; sessions that belong to different issues are split.
+4. Each session is posted to Jira as a worklog. Sessions are only removed from the queue after a
+   successful POST. Failed posts retry up to 3 times before being dropped.
+5. Two IDE instances never double-post: heartbeats are claimed before posting, and a lock file
+   serializes writes between processes.
+
+## Requirements
+
+- Any JetBrains IDE built on the IntelliJ Platform **2026.1 or later** (IntelliJ IDEA, PyCharm,
+  WebStorm, GoLand, CLion, etc.).
+- A Jira instance with a **personal API token** and a user able to view the projects you work in.
+- The Jira issue key is taken from the project name (e.g. a project opened from a `MYPROJECT` repo
+  is matched to `MYPROJECT-*` issues). Sessions with no matching issue key are skipped.
 
 ## Installation
 
-- Using the IDE built-in plugin system:
+- **From JetBrains Marketplace** — once published:
+  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> >
+  <kbd>Search for "LogTime"</kbd> > <kbd>Install</kbd>
+- **Manually** — download the latest release
+  (https://github.com/sangharshgautam/logtime/releases) and install it via
+  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> >
+  <kbd>Install plugin from disk...</kbd>
 
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "logtime"</kbd> >
-  <kbd>Install</kbd>
+## Testing pre-release builds
 
-- Using JetBrains Marketplace:
+Test builds are published as **hidden releases**: they are approved by JetBrains but never listed
+publicly. To test one, open the direct Marketplace version link shared with you and follow the
+install prompt in your IDE. New versions are published by pushing a `vX.Y.Z` tag (or manually from
+the GitHub Actions *Publish* workflow).
 
-  Go to [JetBrains Marketplace](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID) and install it by clicking the <kbd>Install to ...</kbd> button in case your IDE is running.
+## Configuration
 
-  You can also download the [latest release](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID/versions) from JetBrains Marketplace and install it manually using
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
+Open <kbd>Tools</kbd> > <kbd>LogTime Settings</kbd> and enter:
 
-- Manually:
+| Setting     | Description                                                        |
+|-------------|--------------------------------------------------------------------|
+| Jira URL    | Your Jira instance, e.g. `https://your-company.atlassian.net`      |
+| Username    | Your Jira username or email                                        |
+| API token   | Your Jira personal API token (Basic auth)                          |
+| Proxy       | Optional HTTP proxy in `host:port` form (e.g. `proxy.corp:8080`)   |
+| Debug       | Verbose logging to the IDE log                                     |
 
-  Download the [latest release](https://github.com/sangharshgautam/logtime/releases/latest) and install it manually using
-  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
+Data is stored in `~/.logtime/`:
 
+- `logtime.cfg` — configuration (the settings you enter in the dialog).
+- `heartbeats.jsonl` — the durable heartbeat queue.
 
----
-Plugin based on the [IntelliJ Platform Plugin Template][template].
+Both locations can be redirected by setting the `LOGTIME_HOME` environment variable.
 
-[template]: https://github.com/JetBrains/intellij-platform-plugin-template
-[docs:plugin-description]: https://plugins.jetbrains.com/docs/intellij/plugin-user-experience.html#plugin-description-and-presentation
+## Development
+
+Requires JDK 21+ and Gradle (via the included wrapper).
+
+```sh
+./gradlew build          # compile, test, and package
+./gradlew clean :test    # run the test suite only
+./gradlew runIde         # launch a sandbox IDE with the plugin
+```
+
+The build uses the IntelliJ Platform Gradle Plugin. Plugin details live in
+`src/main/resources/META-INF/plugin.xml`; the version and group come from `gradle.properties`.

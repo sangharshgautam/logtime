@@ -1,19 +1,54 @@
-<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
-<idea-plugin>
-    <id>com.github.sangharshgautam.logtime</id>
-    <name>logtime</name>
-    <vendor>sangharshgautam</vendor>
+﻿<idea-plugin version="2" url="https://logtime.com" require-restart="true">
+    <id>uk.co.sangharsh.logtime.plugin</id>
+    <name>LogTime</name>
+    <version>0.0.1</version>
+    <vendor email="support@logtime.com" url="https://logtime.com">LogTime</vendor>
+
     <description><![CDATA[
-        <p><b>logtime</b> is a repository that provides a pure template to make it easier to create a new plugin project.</p>
-        <p>The main goal of this template is to speed up the setup phase of plugin development for both new and experienced developers by preconfiguring the project scaffold and CI, linking to the proper documentation pages, and keeping everything organized.</p>
+      Automatic time tracking that logs consolidated coding sessions as Jira worklogs.<br />
+      <br />
+      <b>Installation</b><br />
+      <br />
+      1. Inside your IDE, select Preferences -> Plugins.<br />
+      <br />
+      2. Install the LogTime plugin.<br />
+      <br />
+      3. Re-launch your IDE.<br />
+      <br />
+      4. Open Tools -> LogTime Settings and enter your Jira URL, username, and API token.<br />
+      <br />
+      5. Use your IDE like you normally do and your coding time will be tracked into Jira automatically.<br />
+      <br />
+      Source Code:  <a href="https://github.com/sangharshgautam/logtime">https://github.com/sangharshgautam/logtime</a>
     ]]></description>
 
-    <depends>com.intellij.modules.platform</depends>
 
-    <resource-bundle>messages.MyBundle</resource-bundle>
+    <!-- please see http://confluence.jetbrains.com/display/IDEADEV/Build+Number+Ranges for description -->
+    <idea-version since-build="2026"/>
+
+    <!-- please see http://confluence.jetbrains.com/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
+         on how to target different products -->
+    <depends>com.intellij.modules.lang</depends>
+    <depends>com.intellij.modules.platform</depends>
+    <!-- <depends optional="true" config-file="uk.co.sangharsh.logtime.plugin-java.xml">com.intellij.modules.java</depends> -->
 
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="com.github.sangharshgautam.logtime.toolWindow.MyToolWindowFactory" id="MyToolWindow"/>
-        <postStartupActivity implementation="com.github.sangharshgautam.logtime.startup.MyProjectActivity" />
+        <statusBarWidgetFactory implementation="uk.co.sangharsh.logtime.plugin.CustomStatusBar"
+                                id="uk.co.sangharsh.logtime.plugin.CustomStatusBar"
+                                order="first" />
+        <postStartupActivity implementation="uk.co.sangharsh.logtime.plugin.LogTimeStartupActivity" />
     </extensions>
+
+    <application-components>
+        <component>
+            <implementation-class>uk.co.sangharsh.logtime.plugin.LogTime</implementation-class>
+        </component>
+    </application-components>
+
+    <actions>
+        <action id="pluginMenu" class="uk.co.sangharsh.logtime.plugin.PluginMenu" text="LogTime">
+            <add-to-group group-id="ToolsMenu" anchor="first" />
+        </action>
+    </actions>
+
 </idea-plugin>
