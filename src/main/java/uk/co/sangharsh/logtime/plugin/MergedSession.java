@@ -5,20 +5,46 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MergedSession {
     private final BigDecimal startTime;
     private BigDecimal endTime;
     private final String project;
+    private final List<Heartbeat> heartbeats;
 
     public MergedSession(Heartbeat firstHeartbeat) {
         this.startTime = firstHeartbeat.timestamp;
         this.endTime = firstHeartbeat.timestamp;
         this.project = firstHeartbeat.project;
+        this.heartbeats = new ArrayList<>();
+        this.heartbeats.add(firstHeartbeat);
     }
 
     public void updateEndTime(BigDecimal newEndTime) {
         this.endTime = newEndTime;
+    }
+
+    public void addHeartbeat(Heartbeat heartbeat) {
+        heartbeats.add(heartbeat);
+    }
+
+    public List<Heartbeat> getHeartbeats() {
+        return heartbeats;
+    }
+
+    public int getHeartbeatCount() {
+        return heartbeats.size();
+    }
+
+    /**
+     * The most recent heartbeat in this session. Its {@code failCount} is the retry counter used
+     * when this session's worklog fails to post, and it is carried back into the queue so the
+     * counter survives restarts.
+     */
+    public Heartbeat getLastHeartbeat() {
+        return heartbeats.get(heartbeats.size() - 1);
     }
 
     /**

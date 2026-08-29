@@ -11,6 +11,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -21,11 +23,12 @@ public final class JiraService {
         return ApplicationManager.getApplication().getService(JiraService.class);
     }
 
-    public String postWorklog(String issueKey, String jsonPayload) {
+    public boolean postWorklog(String issueKey, String jsonPayload) {
         String url = String.join("/", ConfigFile.getJiraUrl(), "rest/api/2/issue", issueKey, "worklog");
         HttpURLConnection connection = null;
         try {
-            connection = (HttpURLConnection) new URL(url).openConnection();
+            Proxy proxy = buildProxy(ConfigFile.get("settings", "proxy", false));
+            connection = (HttpURLConnection) new URL(url).openConnection(proxy == null ? Proxy.NO_PROXY : proxy);
             connection.setRequestMethod("POST");
             connection.setRequestProperty("Content-Type", "application/json");
             connection.setRequestProperty("Accept", "application/json");
@@ -52,27 +55,70 @@ public final class JiraService {
             }
 
             int status = connection.getResponseCode();
-            InputStream stream = status >= 200 && status < 300
-                    ? connection.getInputStream()
-                    : connection.getErrorStream();
-            if (stream == null) return null;
-
-            StringBuilder body = new StringBuilder();
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    body.append(line);
+            if (status >= 200 && status < 300) {
+                return true;
+            }
+            // Drain the error stream so the connection can be reused/closed cleanly.
+            InputStream stream = connection.getErrorStream();
+            if (stream != null) {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
+                    while (reader.readLine() != null) {
+                        // discard
+                    }
                 }
             }
-            return body.toString();
+            uk.co.sangharsh.logtime.plugin.LogTime.log.warn("Jira worklog POST failed with status " + status + " for " + url);
+            return false;
         } catch (IOException e) {
             // Handle network errors gracefully
             e.printStackTrace();
-            return null;
+            return false;
         } finally {
             if (connection != null) {
                 connection.disconnect();
             }
         }
+    }
+
+    /**
+     * Parses the user-configured proxy setting (expected {@code host:port}) into a {@link Proxy}.
+     * Returns null when the setting is empty, malformed, or not a valid host, in which case the
+     * connection uses the default (no) proxy.
+     *
+     * @param raw the raw proxy string from config, or null
+     */
+    private Proxy buildProxy(String raw) {
+        if (raw == null) return null;
+        String s = raw.trim();
+        if (s.isEmpty()) return null;
+
+        // Allow an optional scheme prefix (e.g. "http://host:8080").
+        if (s.startsWith("http://")) {
+            s = s.substring("http://".length());
+        } else if (s.startsWith("https://")) {
+            s = s.substring("https://".length());
+        }
+
+        String host;
+        int port = 80;
+        int colon = s.lastIndexOf(':');
+        if (colon >= 0) {
+            host = s.substring(0, colon).trim();
+            String portStr = s.substring(colon + 1).trim();
+            try {
+                port = Integer.parseInt(portStr);
+            } catch (NumberFormatException e) {
+                uk.co.sangharsh.logtime.plugin.LogTime.log.warn("Invalid proxy port in '" + raw + "'");
+                return null;
+            }
+        } else {
+            host = s;
+        }
+
+        if (host.isEmpty() || port < 1 || port > 65535) {
+            uk.co.sangharsh.logtime.plugin.LogTime.log.warn("Invalid proxy setting '" + raw + "'");
+            return null;
+        }
+        return new Proxy(Proxy.Type.HTTP, new InetSocketAddress(host, port));
     }
 }

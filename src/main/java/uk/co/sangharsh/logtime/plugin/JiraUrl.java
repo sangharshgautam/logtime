@@ -22,7 +22,6 @@ public class JiraUrl extends DialogWrapper {
     private final JPanel panel;
     private final JLabel label;
     private final JTextField input;
-    private final LinkPane link;
 
     public static boolean isDialogOpened = false;
 
@@ -36,8 +35,6 @@ public class JiraUrl extends DialogWrapper {
         panel.add(label);
         input = new JTextField(36);
         panel.add(input);
-        link = new LinkPane("https://logtime.com/api-key");
-        panel.add(link);
 
         Disposer.register(getDisposable(), () -> isDialogOpened = false);
 

@@ -44,7 +44,7 @@ public class CustomStatusBar implements StatusBarWidgetFactory {
     @NotNull
     @Override
     public StatusBarWidget createWidget(@NotNull Project project) {
-        return new WakaTimeStatusBarWidget(project);
+        return new LogTimeStatusBarWidget(project);
     }
 
     @Override
@@ -55,12 +55,12 @@ public class CustomStatusBar implements StatusBarWidgetFactory {
         return true;
     }
 
-    public class WakaTimeStatusBarWidget implements StatusBarWidget {
+    public class LogTimeStatusBarWidget implements StatusBarWidget {
         public final Project project;
         public final StatusBar statusBar;
 
         @Contract(pure = true)
-        public WakaTimeStatusBarWidget(Project project) {
+        public LogTimeStatusBarWidget(Project project) {
             this.project = project;
             this.statusBar = WindowManager.getInstance().getStatusBar(project);
         }
@@ -84,9 +84,9 @@ public class CustomStatusBar implements StatusBarWidgetFactory {
         public void dispose() { }
 
         private class StatusBarPresenter implements MultipleTextValuesPresentation, Multiframe {
-            private final WakaTimeStatusBarWidget widget;
+            private final LogTimeStatusBarWidget widget;
 
-            public StatusBarPresenter(WakaTimeStatusBarWidget widget) {
+            public StatusBarPresenter(LogTimeStatusBarWidget widget) {
                 this.widget = widget;
             }
 
@@ -94,7 +94,6 @@ public class CustomStatusBar implements StatusBarWidgetFactory {
             @Override
             public ListPopup getPopupStep() {
                 LogTime.openDashboardWebsite();
-                LogTime.updateStatusBarText();
                 if (widget.statusBar != null) widget.statusBar.updateWidget("LogTime");
                 return null;
             }
@@ -125,7 +124,7 @@ public class CustomStatusBar implements StatusBarWidgetFactory {
 
             @Override
             public StatusBarWidget copy() {
-                return new WakaTimeStatusBarWidget(this.widget.project);
+                return new LogTimeStatusBarWidget(this.widget.project);
             }
 
             @Override

@@ -11,6 +11,7 @@ package uk.co.sangharsh.logtime.plugin;
 import java.math.BigDecimal;
 
 public class Heartbeat {
+    public String id;
     public String entity;
     public String localFile;
     public Integer lineCount;
@@ -24,4 +25,7 @@ public class Heartbeat {
     public String language;
     public Boolean isBuilding;
     public Long timePassed;
+    public Integer failCount;
+    public String owner;
+    public Long claimedAt;
 }

@@ -1,6 +1,6 @@
 /* ==========================================================
 File:        Settings.java
-Description: Prompts user for api key if it does not exist.
+Description: LogTime settings dialog (Jira connection, display, debug).
 Maintainer:  LogTime <support@logtime.com>
 License:     BSD, see LICENSE for more details.
 Website:     https://logtime.com/
@@ -16,15 +16,15 @@ import uk.co.sangharsh.logtime.plugin.service.UrlValidator;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.UUID;
 
 public class Settings extends DialogWrapper {
     private final JPanel panel;
     private final JLabel jiraUrlLabel;
     private final JTextField jiraUrl;
-
-    private final JLabel apiKeyLabel;
-    private final JTextField apiKey;
+    private final JLabel jiraUsernameLabel;
+    private final JTextField jiraUsername;
+    private final JLabel jiraApiTokenLabel;
+    private final JPasswordField jiraApiToken;
     private final JLabel proxyLabel;
     private final JTextField proxy;
     private final JLabel debugLabel;
@@ -45,15 +45,22 @@ public class Settings extends DialogWrapper {
         jiraUrl.setText(ConfigFile.getJiraUrl());
         panel.add(jiraUrl);
 
-        apiKeyLabel = new JLabel("API key:", JLabel.CENTER);
-        panel.add(apiKeyLabel);
-        apiKey = new JTextField(36);
-        apiKey.setText(ConfigFile.getApiKey());
-        panel.add(apiKey);
+        jiraUsernameLabel = new JLabel("Jira username:", JLabel.CENTER);
+        panel.add(jiraUsernameLabel);
+        jiraUsername = new JTextField(36);
+        jiraUsername.setText(ConfigFile.getJiraUsername());
+        panel.add(jiraUsername);
+
+        jiraApiTokenLabel = new JLabel("Jira API token:", JLabel.CENTER);
+        panel.add(jiraApiTokenLabel);
+        jiraApiToken = new JPasswordField(36);
+        jiraApiToken.setText(ConfigFile.getJiraApiToken());
+        panel.add(jiraApiToken);
 
         proxyLabel = new JLabel("Proxy:", JLabel.CENTER);
         panel.add(proxyLabel);
         proxy = new JTextField();
+        proxy.setToolTipText("HTTP proxy in the form host:port (e.g. 127.0.0.1:8080). Leave empty for none.");
         String p = ConfigFile.get("settings", "proxy", false);
         if (p == null) p = "";
         proxy.setText(p);
@@ -84,22 +91,22 @@ public class Settings extends DialogWrapper {
 
     @Override
     protected ValidationInfo doValidate() {
-        try {
-            UUID.fromString(apiKey.getText().replaceFirst("^waka_", ""));
-        } catch (Exception e) {
-            return new ValidationInfo("Invalid api key.");
-        }
         boolean isValidUrl = UrlValidator.isValidURL(jiraUrl.getText());
-        if(!isValidUrl){
+        if (!isValidUrl) {
             return new ValidationInfo("Jira Url is not valid.");
+        }
+        String proxyText = proxy.getText() == null ? "" : proxy.getText().trim();
+        if (!proxyText.isEmpty() && !proxyText.matches("^(https?://)?[A-Za-z0-9._-]+(:\\d{1,5})?$")) {
+            return new ValidationInfo("Proxy must be in the form host:port.");
         }
         return null;
     }
 
     @Override
     public void doOKAction() {
-        ConfigFile.setApiKey(apiKey.getText());
         ConfigFile.setJiraUrl(jiraUrl.getText());
+        ConfigFile.setJiraUsername(jiraUsername.getText());
+        ConfigFile.setJiraApiToken(new String(jiraApiToken.getPassword()));
         ConfigFile.set("settings", "proxy", false, proxy.getText());
         ConfigFile.set("settings", "debug", false, debug.isSelected() ? "true" : "false");
         ConfigFile.set("settings", "status_bar_enabled", false, statusBar.isSelected() ? "true" : "false");

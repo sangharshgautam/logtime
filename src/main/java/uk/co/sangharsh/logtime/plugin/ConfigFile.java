@@ -11,34 +11,45 @@ package uk.co.sangharsh.logtime.plugin;
 import java.io.*;
 
 public class ConfigFile {
-    private static final String fileName = ".wakatime.cfg";
-    private static final String internalFileName = "wakatime-internal.cfg";
-    private static final String defaultDashboardUrl = "https://logtime.com/dashboard";
+    private static final String fileName = "logtime.cfg";
+    private static final String internalFileName = "logtime-internal.cfg";
     private static String cachedHomeFolder = null;
-    private static String _api_key = "";
     private static String _jira_url = "";
     private static String _jira_username = "";
     private static String _jira_api_token = "";
-    private static String _dashboard_url = "";
     private static boolean _usingVaultCmd = false;
+    private static String _instance_id = "";
+
+    public static String getInstanceId() {
+        if (!ConfigFile._instance_id.equals("")) {
+            return ConfigFile._instance_id;
+        }
+        String id = get("settings", "instance_id", false);
+        if (id == null || id.trim().equals("")) {
+            id = java.util.UUID.randomUUID().toString();
+            set("settings", "instance_id", false, id);
+        }
+        ConfigFile._instance_id = id;
+        return id;
+    }
 
     private static String getConfigFilePath(boolean internal) {
         if (ConfigFile.cachedHomeFolder == null) {
-            String wakatimeHome = System.getenv("WAKATIME_HOME");
-            if (wakatimeHome != null && !wakatimeHome.trim().isEmpty()) {
-                File folder = new File(wakatimeHome.trim());
+            String logtimeHome = System.getenv("LOGTIME_HOME");
+            if (logtimeHome != null && !logtimeHome.trim().isEmpty()) {
+                File folder = new File(logtimeHome.trim());
                 ConfigFile.cachedHomeFolder = folder.getAbsolutePath();
-                LogTime.log.debug("Using $WAKATIME_HOME for config folder: " + ConfigFile.cachedHomeFolder);
+                LogTime.log.debug("Using $LOGTIME_HOME for config folder: " + ConfigFile.cachedHomeFolder);
                 if (internal) {
-                    return new File(new File(ConfigFile.cachedHomeFolder, ".wakatime"), internalFileName).getAbsolutePath();
+                    return new File(ConfigFile.cachedHomeFolder, internalFileName).getAbsolutePath();
                 }
                 return new File(ConfigFile.cachedHomeFolder, fileName).getAbsolutePath();
             }
-            ConfigFile.cachedHomeFolder = new File(System.getProperty("user.home")).getAbsolutePath();
+            ConfigFile.cachedHomeFolder = new File(System.getProperty("user.home"), ".logtime").getAbsolutePath();
             LogTime.log.debug("Using $HOME for config folder: " + ConfigFile.cachedHomeFolder);
         }
         if (internal) {
-            return new File(new File(ConfigFile.cachedHomeFolder, ".wakatime"), internalFileName).getAbsolutePath();
+            return new File(ConfigFile.cachedHomeFolder, internalFileName).getAbsolutePath();
         }
         return new File(ConfigFile.cachedHomeFolder, fileName).getAbsolutePath();
     }
@@ -159,27 +170,6 @@ public class ConfigFile {
         }
     }
 
-    public static String getApiKey() {
-        if (ConfigFile._usingVaultCmd) {
-            return "";
-        }
-        if (!ConfigFile._api_key.equals("")) {
-            return ConfigFile._api_key;
-        }
-
-        String apiKey = get("settings", "api_key", false);
-        if (apiKey == null) {
-            String vaultCmd = get("settings", "api_key_vault_cmd", false);
-            if (vaultCmd != null && !vaultCmd.trim().equals("")) {
-                ConfigFile._usingVaultCmd = true;
-                return "";
-            }
-            apiKey = "";
-        }
-
-        ConfigFile._api_key = apiKey;
-        return apiKey;
-    }
     public static String getJiraUrl() {
         if (ConfigFile._usingVaultCmd) {
             return "";
@@ -190,7 +180,7 @@ public class ConfigFile {
 
         String jiraUrl = get("settings", "jira_url", false);
         if (jiraUrl == null) {
-            String vaultCmd = get("settings", "api_key_vault_cmd", false);
+            String vaultCmd = get("settings", "jira_api_token_vault_cmd", false);
             if (vaultCmd != null && !vaultCmd.trim().equals("")) {
                 ConfigFile._usingVaultCmd = true;
                 return "";
@@ -240,35 +230,9 @@ public class ConfigFile {
         ConfigFile._jira_api_token = token;
     }
 
-    public static void setApiKey(String apiKey) {
-        set("settings", "api_key", false, apiKey);
-        ConfigFile._api_key = apiKey;
-    }
     public static void setJiraUrl(String jiraUrl) {
         set("settings", "jira_url", false, jiraUrl);
         ConfigFile._jira_url = jiraUrl;
-    }
-
-    public static String getDashboardUrl() {
-        if (!ConfigFile._dashboard_url.equals("")) {
-            return ConfigFile._dashboard_url;
-        }
-
-        String apiUrl = get("settings", "api_url", false);
-        if (apiUrl == null) {
-            ConfigFile._dashboard_url = ConfigFile.defaultDashboardUrl;
-        } else {
-            ConfigFile._dashboard_url = convertApiUrlToDashboardUrl(apiUrl);
-        }
-        return ConfigFile._dashboard_url;
-    }
-
-    private static String convertApiUrlToDashboardUrl(String apiUrl) {
-        int apiIndex = apiUrl.indexOf("/api");
-        if (apiIndex == -1) {
-            return defaultDashboardUrl;
-        }
-        return apiUrl.substring(0, apiIndex);
     }
 
     private static String removeNulls(String s) {
