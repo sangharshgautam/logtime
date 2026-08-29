@@ -28,12 +28,11 @@ public class JiraDurationUtils {
         return dateTime.format(JIRA_FORMATTER);
     }
 
-    public static long getJiraSeconds(BigDecimal startSec, BigDecimal endSec) {
-        // If inputs are already seconds:
-        return endSec.subtract(startSec).longValue();
 
-        // If inputs are milliseconds:
-        // return endMilli.subtract(startMilli).divide(BigDecimal.valueOf(1000)).longValue();
+    public static long getJiraSeconds(BigDecimal startSec, BigDecimal endSec) {
+        if (startSec == null || endSec == null) return 0;
+        long seconds = endSec.subtract(startSec).longValue();
+        return Math.max(0, seconds);
     }
     /**
      * Converts a start and end timestamp (in milliseconds) into a Jira-formatted duration string.

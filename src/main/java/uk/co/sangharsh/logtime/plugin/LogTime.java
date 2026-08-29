@@ -1,15 +1,16 @@
 /* ==========================================================
 File:        LogTime.java
 Description: Automatic time tracking for JetBrains IDEs.
-Maintainer:  LogTime <support@wakatime.com>
+Maintainer:  LogTime <support@logtime.com>
 License:     BSD, see LICENSE for more details.
-Website:     https://wakatime.com/
+Website:     https://logtime.com/
 ===========================================================*/
 
 package uk.co.sangharsh.logtime.plugin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.AppTopics;
+import com.intellij.openapi.diagnostic.LogLevel;
 import uk.co.sangharsh.logtime.plugin.listener.*;
 import uk.co.sangharsh.logtime.plugin.service.JiraDurationUtils;
 import uk.co.sangharsh.logtime.plugin.service.JiraService;
@@ -51,6 +52,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
@@ -92,8 +94,8 @@ public class LogTime implements ApplicationComponent {
             // use PluginManagerCore if PluginManager deprecated
             VERSION = PluginManagerCore.getPlugin(PluginId.getId("uk.co.sangharsh.logtime.plugin")).getVersion();
         }
-        log.info("Initializing LogTime plugin v" + VERSION + " (https://wakatime.com/)");
-        //System.out.println("Initializing LogTime plugin v" + VERSION + " (https://wakatime.com/)");
+        log.info("Initializing LogTime plugin v" + VERSION + " (https://logtime.com/)");
+        //System.out.println("Initializing LogTime plugin v" + VERSION + " (https://logtime.com/)");
 
         // Set runtime constants
         IDE_NAME = ApplicationNamesInfo.getInstance().getFullProductName().replaceAll(" ", "").toLowerCase();
@@ -327,7 +329,63 @@ public class LogTime implements ApplicationComponent {
             }
         }, 10, TimeUnit.SECONDS);
     }
+    // Maximum gap (in SECONDS, since heartbeats use epoch seconds) between heartbeats
+    // of the same project before they are considered a separate worklog block (5 minutes).
+    private static final BigDecimal MAX_ALLOWED_GAP_SECONDS = new BigDecimal("300");
 
+    private static java.util.List<MergedSession> drainAndMergeHeartbeats(){
+        java.util.List<Heartbeat> rawHeartbeats = new ArrayList<>();
+        Heartbeat element;
+
+        // 1. Thread-safely drain the active listeners' pipeline queue
+        while ((element = heartbeatsQueue.poll()) != null) {
+            rawHeartbeats.add(element);
+        }
+
+        if (rawHeartbeats.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // 2. Sort chronologically using BigDecimal's built-in comparator
+        rawHeartbeats.sort((h1, h2) -> h1.timestamp.compareTo(h2.timestamp));
+
+        List<MergedSession> mergedSessions = new ArrayList<>();
+
+        // Initialize the first tracking window
+        MergedSession activeSession = new MergedSession(rawHeartbeats.get(0));
+
+        // 3. Process the timeline
+        for (int i = 1; i < rawHeartbeats.size(); i++) {
+            Heartbeat nextHb = rawHeartbeats.get(i);
+
+            // Compute time gap arithmetic: nextTime - currentEndTime (already in seconds)
+            BigDecimal gapSeconds = nextHb.timestamp.subtract(activeSession.getEndTime());
+
+            // Same project check (null-safe)
+            boolean sameProject = projectEquals(activeSession.getProject(), nextHb.project);
+
+            // Check if the gap is within the allowed 5-minute threshold
+            if (gapSeconds.compareTo(MAX_ALLOWED_GAP_SECONDS) <= 0 && sameProject) {
+
+                // Gap is NOT considerable: extend the active tracking block's boundary
+                activeSession.updateEndTime(nextHb.timestamp);
+            } else {
+                // Gap IS considerable: save the current block and initialize a new tracking window
+                mergedSessions.add(activeSession);
+                activeSession = new MergedSession(nextHb);
+            }
+        }
+
+        // Save the final tracking block remaining in the loop
+        mergedSessions.add(activeSession);
+
+        return mergedSessions;
+    }
+
+    private static boolean projectEquals(String a, String b) {
+        if (a == null) return b == null;
+        return a.equals(b);
+    }
     private static void processHeartbeatQueue() {
         if (!LogTime.READY) return;
         if (pluginString() == null) return;
@@ -335,87 +393,78 @@ public class LogTime implements ApplicationComponent {
         checkApiKey();
 
         // get single heartbeat from queue
-        Heartbeat heartbeat = heartbeatsQueue.poll();
-        if (heartbeat == null)
+        List<MergedSession> consolidatedSessions = drainAndMergeHeartbeats();
+        if (consolidatedSessions.isEmpty()){
+            System.out.println("[Tracker] Queue is empty. No new activity to log.");
             return;
-
-        // get all extra heartbeats from queue
-        ArrayList<Heartbeat> extraHeartbeats = new ArrayList<>();
-        while (true) {
-            Heartbeat h = heartbeatsQueue.poll();
-            if (h == null)
-                break;
-            extraHeartbeats.add(h);
+        }
+        System.out.println("[Tracker] Merged queue down into " + consolidatedSessions.size() + " unique worklog blocks.");
+        for (MergedSession session : consolidatedSessions) {
+            sendToJira(session);
         }
 
 //        sendHeartbeat(heartbeat, extraHeartbeats);
 
         // Send to Jira if issue key is detected
-        sendToJira(heartbeat, extraHeartbeats);
+
     }
 
-    private static void sendToJira(Heartbeat heartbeat, final ArrayList<Heartbeat> extraHeartbeats) {
-        String issueKey = extractJiraIssueKey(heartbeat);
-        if (issueKey != null) {
-            JiraService jiraService = JiraService.getInstance();
+    private static void sendToJira(MergedSession session) {
+        // Skip sessions with no measurable elapsed time so we don't log bogus worklogs
+        if (!session.hasElapsed()) return;
 
-            try {
-                TimeSpent timeSpent = buildJiraWorklogPayload(heartbeat);
-                ObjectMapper mapper = new ObjectMapper();
-                // Optional: formats it cleanly with indentation
-                String jsonPayload = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(timeSpent);
-                if (jsonPayload != null) {
-                    String response = jiraService.postWorklog(issueKey, jsonPayload);
-                    if (response != null) {
-                        log.debug("Jira worklog sent for issue: " + issueKey);
-                    } else {
-                        log.warn("Failed to send Jira worklog for issue: " + issueKey);
-                    }
+        String issueKey = extractJiraIssueKey(session);
+        if (issueKey == null) return;
+
+        JiraService jiraService = JiraService.getInstance();
+        try {
+            TimeSpent timeSpent = buildJiraWorklogPayload(session);
+            if (timeSpent == null || timeSpent.timeSpentSeconds <= 0) return;
+            ObjectMapper mapper = new ObjectMapper();
+            String jsonPayload = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(timeSpent);
+            System.out.println("[Tracker] Payload. " + jsonPayload);
+            if (jsonPayload != null) {
+                String response = jiraService.postWorklog(issueKey, jsonPayload);
+                if (response != null) {
+                    log.debug("Jira worklog sent for issue: " + issueKey);
+                } else {
+                    log.warn("Failed to send Jira worklog for issue: " + issueKey);
                 }
-            } catch (Exception e) {
-                // Handle serialization exceptions safely within the IDE
-                e.printStackTrace();
+                log.debug(jsonPayload);
             }
-
-
+        } catch (Exception e) {
+            // Handle serialization exceptions safely within the IDE
+            e.printStackTrace();
         }
     }
 
-    private static String extractJiraIssueKey(Heartbeat heartbeat) {
-        // Extract Jira issue key from entity, project, or file name
-        // Common pattern: PROJECT-123 (e.g., JIRA-123, ABC-456)
-        if (heartbeat.entity != null) {
-            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("[A-Z]+-\\d+");
-            java.util.regex.Matcher matcher = pattern.matcher(heartbeat.entity);
-            if (matcher.find()) {
-                return matcher.group();
-            }
+    private static final java.util.regex.Pattern JIRA_ISSUE_KEY_PATTERN =
+            java.util.regex.Pattern.compile("[A-Z]+-\\d+");
+
+    private static String extractJiraIssueKey(MergedSession session) {
+        // Look for a Jira issue key (e.g. PROJECT-123) in the project name, or fall back to the
+        // containing directory / file if the project name has no key. Returns null when there is
+        // no key so we never log to a hardcoded placeholder issue.
+        String source = session.getProject();
+        if (source == null) return null;
+
+        java.util.regex.Matcher matcher = JIRA_ISSUE_KEY_PATTERN.matcher(source);
+        if (matcher.find()) {
+            return matcher.group();
         }
-        if (heartbeat.project != null) {
-            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("[A-Z]+-\\d+");
-            java.util.regex.Matcher matcher = pattern.matcher(heartbeat.project);
-            if (matcher.find()) {
-                return matcher.group();
-            }
-        }
-        if (heartbeat.localFile != null) {
-            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("[A-Z]+-\\d+");
-            java.util.regex.Matcher matcher = pattern.matcher(heartbeat.localFile);
-            if (matcher.find()) {
-                return matcher.group();
-            }
-        }
-        return "IT-1234";
+        return null;
     }
 
-    private static TimeSpent buildJiraWorklogPayload(Heartbeat heartbeat) {
+    private static TimeSpent buildJiraWorklogPayload(MergedSession session) {
+        String startTimeISO = session.getStartTimeISO();
+        long secondsSpent = session.getDurationInSeconds();
         // Build JSON payload for Jira worklog
         // Adjust this based on your Jira API requirements
         try {
             TimeSpent payload = new TimeSpent();
-            payload.comment = heartbeat.entity;
-            payload.started = JiraDurationUtils.convertMilliToJiraFormat(heartbeat.timestamp);
-            payload.timeSpent = String.valueOf(heartbeat.timePassed)+"s";
+            payload.comment = String.format("Time tracking consolidated log for project [%s]", session.getProject());
+            payload.started = startTimeISO;
+            payload.timeSpentSeconds = secondsSpent;
             return payload;
         } catch (Exception e) {
             log.error("Failed to build Jira worklog payload", e);
@@ -642,7 +691,7 @@ public class LogTime implements ApplicationComponent {
     private static String getBuiltinProxy() {
         HttpConfigurable config = HttpConfigurable.getInstance();
 
-        if (!config.isHttpProxyEnabledForUrl("https://api.wakatime.com")) return null;
+        if (!config.isHttpProxyEnabledForUrl("https://api.logtime.com")) return null;
 
         String host = config.PROXY_HOST;
         if (host != null) {
@@ -717,7 +766,7 @@ public class LogTime implements ApplicationComponent {
     }
 
     public static void setLoggingLevel() {
-        /*
+
         try {
             if (LogTime.DEBUG) {
                 log.setLevel(LogLevel.DEBUG);
@@ -728,7 +777,6 @@ public class LogTime implements ApplicationComponent {
         } catch(Throwable e) {
             System.out.println(e.getStackTrace());
         }
-        */
     }
 
     private static String getLanguage(final VirtualFile file) {

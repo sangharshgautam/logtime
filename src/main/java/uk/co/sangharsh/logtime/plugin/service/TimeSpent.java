@@ -1,7 +1,7 @@
 package uk.co.sangharsh.logtime.plugin.service;
 
 public class TimeSpent {
-    public String timeSpent;
+    public long timeSpentSeconds;
     public String started;
     public String comment;
 }

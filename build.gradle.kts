@@ -6,18 +6,14 @@ plugins {
     id("org.jetbrains.intellij.platform")
     id("org.jetbrains.changelog")
 }
-// --- ADDED THIS BLOCK TO TARGET A SINGLE VERSION ---
+// --- VERIFY AGAINST ALL BUILDS AFTER 2026 ---
 intellijPlatform {
     pluginVerification {
         ides {
-            // This forces the verifier to ONLY test against 2025.2.6.2
-            // Targets only your exact version explicitly
+            // Verify against all IDEA builds from 2026 onward
             select {
-                // Pin it to IntelliJ IDEA Ultimate or Community matching your exact build
                 types.set(listOf(IntelliJPlatformType.IntellijIdea))
-                version = "2026.1.3"
-//                sinceBuild.set("2025.2.6.2")
-//                untilBuild.set("2025.2.6.2")
+                sinceBuild = "2026"
             }
         }
     }

@@ -1,9 +1,9 @@
 /* ==========================================================
 File:        ConfigFile.java
 Description: Read and write settings from the INI config file.
-Maintainer:  LogTime <support@wakatime.com>
+Maintainer:  LogTime <support@logtime.com>
 License:     BSD, see LICENSE for more details.
-Website:     https://wakatime.com/
+Website:     https://logtime.com/
 ===========================================================*/
 
 package uk.co.sangharsh.logtime.plugin;
@@ -13,10 +13,12 @@ import java.io.*;
 public class ConfigFile {
     private static final String fileName = ".wakatime.cfg";
     private static final String internalFileName = "wakatime-internal.cfg";
-    private static final String defaultDashboardUrl = "https://wakatime.com/dashboard";
+    private static final String defaultDashboardUrl = "https://logtime.com/dashboard";
     private static String cachedHomeFolder = null;
     private static String _api_key = "";
     private static String _jira_url = "";
+    private static String _jira_username = "";
+    private static String _jira_api_token = "";
     private static String _dashboard_url = "";
     private static boolean _usingVaultCmd = false;
 
@@ -202,6 +204,40 @@ public class ConfigFile {
 
     public static boolean usingVaultCmd() {
         return ConfigFile._usingVaultCmd;
+    }
+
+    public static String getJiraUsername() {
+        if (ConfigFile._usingVaultCmd) {
+            return "";
+        }
+        if (!ConfigFile._jira_username.equals("")) {
+            return ConfigFile._jira_username;
+        }
+        String username = get("settings", "jira_username", false);
+        ConfigFile._jira_username = username == null ? "" : username;
+        return ConfigFile._jira_username;
+    }
+
+    public static void setJiraUsername(String username) {
+        set("settings", "jira_username", false, username);
+        ConfigFile._jira_username = username;
+    }
+
+    public static String getJiraApiToken() {
+        if (ConfigFile._usingVaultCmd) {
+            return "";
+        }
+        if (!ConfigFile._jira_api_token.equals("")) {
+            return ConfigFile._jira_api_token;
+        }
+        String token = get("settings", "jira_api_token", false);
+        ConfigFile._jira_api_token = token == null ? "" : token;
+        return ConfigFile._jira_api_token;
+    }
+
+    public static void setJiraApiToken(String token) {
+        set("settings", "jira_api_token", false, token);
+        ConfigFile._jira_api_token = token;
     }
 
     public static void setApiKey(String apiKey) {

@@ -1,9 +1,9 @@
 /* ==========================================================
 File:        Dependencies.java
 Description: Manages plugin dependencies.
-Maintainer:  LogTime <support@wakatime.com>
+Maintainer:  LogTime <support@logtime.com>
 License:     BSD, see LICENSE for more details.
-Website:     https://wakatime.com/
+Website:     https://logtime.com/
 ===========================================================*/
 
 package uk.co.sangharsh.logtime.plugin;
@@ -227,7 +227,7 @@ public class Dependencies {
     }
 
     private static void reportMissingPlatformSupport(String osname, String architecture) {
-        String url = "https://api.wakatime.com/api/v1/cli-missing?osname=" + osname + "&architecture=" + architecture + "&plugin=" + LogTime.IDE_NAME;
+        String url = "https://api.logtime.com/api/v1/cli-missing?osname=" + osname + "&architecture=" + architecture + "&plugin=" + LogTime.IDE_NAME;
         try {
             getUrlAsString(url, null, false);
         } catch (Exception e) {
