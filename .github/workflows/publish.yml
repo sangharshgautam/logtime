@@ -1,0 +1,50 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Plugin version to publish (ignored when triggered by a v* tag)'
+        required: false
+        default: ''
+
+jobs:
+  publish:
+    name: Publish to JetBrains Marketplace
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Resolve plugin version
+        id: version
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            PLUGIN_VERSION="${GITHUB_REF_NAME#v}"
+          else
+            PLUGIN_VERSION="${{ github.event.inputs.version }}"
+          fi
+          if [ -z "$PLUGIN_VERSION" ]; then
+            echo "::error::Plugin version is required: use a v* tag or provide the version input."
+            exit 1
+          fi
+          echo "pluginVersion=${PLUGIN_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Publishing version: ${PLUGIN_VERSION}"
+
+      - name: Test and publish
+        env:
+          INTELLIJ_PLUGIN_PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PLUGIN_PUBLISH_TOKEN }}
+        run: ./gradlew --no-daemon test publishPlugin -Pversion=${{ steps.version.outputs.pluginVersion }}

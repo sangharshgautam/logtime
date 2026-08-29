@@ -1,3 +1,4 @@
+import org.jetbrains.changelog.Changelog
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
@@ -16,6 +17,22 @@ intellijPlatform {
                 sinceBuild = "2026"
             }
         }
+    }
+    pluginConfiguration {
+        version.set(project.version.toString())
+        changeNotes.set(provider {
+            val latest = try {
+                changelog.getLatest()
+            } catch (e: Exception) {
+                changelog.getUnreleased()
+            }
+            changelog.renderItem(latest, Changelog.OutputType.HTML)
+        })
+    }
+    publishing {
+        token.set(System.getenv("INTELLIJ_PLUGIN_PUBLISH_TOKEN"))
+        channels.set(listOf("default"))
+        hidden.set(true)
     }
 }
 // --------------------------------------------------

@@ -44,6 +44,13 @@ as worklogs — no timers, no manual entries.
   <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> >
   <kbd>Install plugin from disk...</kbd>
 
+## Testing pre-release builds
+
+Test builds are published as **hidden releases**: they are approved by JetBrains but never listed
+publicly. To test one, open the direct Marketplace version link shared with you and follow the
+install prompt in your IDE. New versions are published by pushing a `vX.Y.Z` tag (or manually from
+the GitHub Actions *Publish* workflow).
+
 ## Configuration
 
 Open <kbd>Tools</kbd> > <kbd>LogTime Settings</kbd> and enter:
