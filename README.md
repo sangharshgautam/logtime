@@ -82,3 +82,4 @@ Requires JDK 21+ and Gradle (via the included wrapper).
 
 The build uses the IntelliJ Platform Gradle Plugin. Plugin details live in
 `src/main/resources/META-INF/plugin.xml`; the version and group come from `gradle.properties`.
+
