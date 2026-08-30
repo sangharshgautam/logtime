@@ -41,7 +41,10 @@ dependencies {
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {
-        intellijIdea("2026.1.3")
+        // useInstaller=false resolves the platform from IntelliJ Maven artifacts instead of the
+        // full IDE installer tar. This avoids the multi-GB extract on CI runners (the source of
+        // "Could not copy tar entry ... libcef.so" failures) and makes a clean build much faster.
+        intellijIdea("2026.1.3", useInstaller = false)
         testFramework(TestFrameworkType.Platform)
     }
 }
