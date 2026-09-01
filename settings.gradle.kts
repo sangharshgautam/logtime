@@ -18,7 +18,10 @@ plugins {
 dependencyResolutionManagement {
     // Configure all projects' repositories
     repositories {
-        mavenCentral()
+        // Route Maven Central through JetBrains' cache-redirector mirror. Direct access from
+        // shared CI runners frequently gets 429 "Too Many Requests" from repo.maven.apache.org,
+        // which disables the repo for the whole build and cascades into other resolution failures.
+        maven("https://cache-redirector.jetbrains.com/repo1.maven.org/maven2/")
 
         // IntelliJ Platform Gradle Plugin Repositories Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-repositories-extension.html
         intellijPlatform {
