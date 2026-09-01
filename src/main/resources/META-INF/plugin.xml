@@ -37,13 +37,8 @@
                                 id="uk.co.sangharsh.logtime.plugin.CustomStatusBar"
                                 order="first" />
         <postStartupActivity implementation="uk.co.sangharsh.logtime.plugin.LogTimeStartupActivity" />
+        <applicationService serviceImplementation="uk.co.sangharsh.logtime.plugin.LogTime" />
     </extensions>
-
-    <application-components>
-        <component>
-            <implementation-class>uk.co.sangharsh.logtime.plugin.LogTime</implementation-class>
-        </component>
-    </application-components>
 
     <actions>
         <action id="pluginMenu" class="uk.co.sangharsh.logtime.plugin.PluginMenu" text="LogTime">

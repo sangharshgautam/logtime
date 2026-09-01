@@ -13,19 +13,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.AppTopics;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.ide.DataManager;
-import com.intellij.ide.plugins.PluginManager;
-import com.intellij.ide.plugins.PluginManagerCore;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationInfo;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ApplicationNamesInfo;
-import com.intellij.openapi.components.ApplicationComponent;
+import com.intellij.openapi.components.Service;
 import com.intellij.openapi.diagnostic.LogLevel;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.*;
-import com.intellij.openapi.extensions.PluginId;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileTypes.FileType;
@@ -48,13 +45,15 @@ import uk.co.sangharsh.logtime.plugin.service.TimeSpent;
 import java.awt.*;
 import java.io.*;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.*;
 
-public class LogTime implements ApplicationComponent {
+@Service(Service.Level.APP)
+public class LogTime implements Disposable {
 
     public static final BigDecimal FREQUENCY = new BigDecimal(2 * 60); // max secs between heartbeats for continuous coding
     public static final Logger log = Logger.getInstance("LogTime");
@@ -96,14 +95,10 @@ public class LogTime implements ApplicationComponent {
             java.util.regex.Pattern.compile("[A-Z]+-\\d+");
 
     public LogTime() {
-    }
-
-    public void initComponent() {
-        try {
-            VERSION = PluginManager.getPlugin(PluginId.getId("uk.co.sangharsh.logtime.plugin")).getVersion();
-        } catch (Exception e) {
-            VERSION = PluginManagerCore.getPlugin(PluginId.getId("uk.co.sangharsh.logtime.plugin")).getVersion();
-        }
+        // Read our own version from META-INF/plugin.xml on the classpath. This is the
+        // cross-version-safe way: PluginManager/PluginManagerCore descriptor lookups were marked
+        // @Internal in 2026.2 with no public typed replacement until PluginDetailsService (262+).
+        VERSION = readPluginVersion();
         log.info("Initializing LogTime plugin v" + VERSION + " (https://logtime.com/)");
 
         IDE_NAME = ApplicationNamesInfo.getInstance().getFullProductName().replaceAll(" ", "").toLowerCase();
@@ -120,6 +115,18 @@ public class LogTime implements ApplicationComponent {
 
         // Recover and flush any heartbeats left over from a previously crashed IDE session.
         recoverPendingHeartbeats();
+    }
+
+    private static String readPluginVersion() {
+        try (InputStream in = LogTime.class.getResourceAsStream("/META-INF/plugin.xml")) {
+            if (in == null) return "unknown";
+            String xml = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+            java.util.regex.Matcher m = java.util.regex.Pattern
+                    .compile("<version>([^<]+)</version>").matcher(xml);
+            return m.find() ? m.group(1) : "unknown";
+        } catch (Exception e) {
+            return "unknown";
+        }
     }
 
     private void setupEventListeners() {
@@ -175,7 +182,8 @@ public class LogTime implements ApplicationComponent {
         });
     }
 
-    public void disposeComponent() {
+    @Override
+    public void dispose() {
         try {
             if (connection != null) connection.disconnect();
         } catch(Exception e) { }
@@ -708,10 +716,5 @@ public class LogTime implements ApplicationComponent {
         e.printStackTrace(new PrintWriter(sw));
         String str = e.getMessage() + "\n" + sw.toString();
         log.error(str);
-    }
-
-    @NotNull
-    public String getComponentName() {
-        return "LogTime";
     }
 }
