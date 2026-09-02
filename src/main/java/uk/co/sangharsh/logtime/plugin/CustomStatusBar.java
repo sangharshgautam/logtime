@@ -93,8 +93,6 @@ public class CustomStatusBar implements StatusBarWidgetFactory {
             @Nullable
             @Override
             public ListPopup getPopupStep() {
-                LogTime.openDashboardWebsite();
-                if (widget.statusBar != null) widget.statusBar.updateWidget("LogTime");
                 return null;
             }
 
@@ -118,8 +116,7 @@ public class CustomStatusBar implements StatusBarWidgetFactory {
             @Nullable
             @Override
             public Consumer<MouseEvent> getClickConsumer() {
-                // Not used; use getPopupStep to handle click events
-                return null;
+                return (MouseEvent e) -> LogTime.openDashboardWebsite();
             }
 
             @Override

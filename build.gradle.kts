@@ -1,3 +1,4 @@
+import org.ajoberstar.grgit.Grgit
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
@@ -6,8 +7,49 @@ plugins {
     java
     id("org.jetbrains.intellij.platform")
     id("org.jetbrains.changelog")
+    id("org.ajoberstar.grgit") version "5.2.2"
 }
-// --- ADDED THIS BLOCK TO TARGET A SINGLE VERSION ---
+// --- VERSION MANAGEMENT ---
+// Derive the plugin version from the nearest git tag (e.g. tag `v0.1.1` -> `0.1.1`).
+// When there are commits past the last tag, we append `-SNAPSHOT` to distinguish
+// pre-release builds from the released artifact.
+// An explicit `-PpluginVersion=...` (or gradle.properties `pluginVersion`) still wins
+// over git derivation for CI builds / release drafts.
+fun resolveGitVersion(): String {
+    return try {
+        val git = Grgit.open(mapOf("dir" to rootProject.projectDir))
+        try {
+            val exact = git.describe {
+                tags = true
+            }
+            if (exact != null && !exact.contains("-")) return exact.removePrefix("v")
+
+            // No exact tag match at HEAD: use the nearest ancestor tag plus a -SNAPSHOT suffix.
+            val nearest = git.describe {
+                tags = true
+            }
+            when {
+                nearest.isNullOrBlank() -> "0.0.1-SNAPSHOT"
+                nearest.contains("-") -> {
+                    val m = Regex("^v?(.+)-([0-9]+)-g[0-9a-f]+$").matchEntire(nearest)
+                    if (m != null) "${m.groupValues[1]}-${m.groupValues[2]}-SNAPSHOT" else nearest.removePrefix("v")
+                }
+                else -> "${nearest.removePrefix("v")}-SNAPSHOT"
+            }
+        } finally {
+            git.close()
+        }
+    } catch (e: Exception) {
+        "0.0.1-SNAPSHOT"
+    }
+}
+
+val resolvedPluginVersion: String = providers.gradleProperty("pluginVersion")
+    .orElse(providers.provider { resolveGitVersion() })
+    .get()
+
+project.version = resolvedPluginVersion
+
 intellijPlatform {
     pluginVerification {
         ides {
@@ -23,7 +65,7 @@ intellijPlatform {
         }
     }
     pluginConfiguration {
-        version.set(providers.gradleProperty("pluginVersion").orElse("0.0.1"))
+        version.set(resolvedPluginVersion)
         changeNotes.set(provider {
             val latest = try {
                 changelog.getLatest()
@@ -51,7 +93,7 @@ dependencies {
 }
 
 afterEvaluate {
-    version = providers.gradleProperty("pluginVersion").orElse("0.0.1").get()
+    version = resolvedPluginVersion
 }
 
 tasks {
