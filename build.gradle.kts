@@ -23,7 +23,7 @@ intellijPlatform {
         }
     }
     pluginConfiguration {
-        version.set(project.version.toString())
+        version.set(providers.gradleProperty("pluginVersion").orElse("0.0.1"))
         changeNotes.set(provider {
             val latest = try {
                 changelog.getLatest()
@@ -48,6 +48,10 @@ dependencies {
         intellijIdea("2026.1.3")
         testFramework(TestFrameworkType.Platform)
     }
+}
+
+afterEvaluate {
+    version = providers.gradleProperty("pluginVersion").orElse("0.0.1").get()
 }
 
 tasks {

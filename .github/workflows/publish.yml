@@ -47,4 +47,4 @@ jobs:
       - name: Test and publish
         env:
           INTELLIJ_PLUGIN_PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PLUGIN_PUBLISH_TOKEN }}
-        run: ./gradlew --no-daemon test publishPlugin -Pversion=${{ steps.version.outputs.pluginVersion }}
+        run: ./gradlew --no-daemon test publishPlugin -PpluginVersion=${{ steps.version.outputs.pluginVersion }}
