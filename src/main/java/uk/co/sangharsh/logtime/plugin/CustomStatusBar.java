@@ -8,6 +8,8 @@ Website:     https://logtime.com/
 
 package uk.co.sangharsh.logtime.plugin;
 
+import com.intellij.ide.ui.LafManager;
+import com.intellij.ide.ui.laf.UIThemeLookAndFeelInfo;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.ListPopup;
 import com.intellij.openapi.util.Disposer;
@@ -17,7 +19,6 @@ import com.intellij.openapi.wm.StatusBarWidget;
 import com.intellij.openapi.wm.StatusBarWidgetFactory;
 import com.intellij.openapi.wm.WindowManager;
 import com.intellij.util.Consumer;
-import com.intellij.util.ui.UIUtil;
 import org.jetbrains.annotations.*;
 
 import javax.swing.*;
@@ -65,6 +66,13 @@ public class CustomStatusBar implements StatusBarWidgetFactory {
             this.statusBar = WindowManager.getInstance().getStatusBar(project);
         }
 
+        private static boolean isDarkTheme() {
+            LafManager lafManager = LafManager.getInstance();
+            if (lafManager == null) return false;
+            UIThemeLookAndFeelInfo current = lafManager.getCurrentUIThemeLookAndFeel();
+            return current != null && current.isDark();
+        }
+
         @NotNull
         @Override
         public String ID() {
@@ -103,7 +111,7 @@ public class CustomStatusBar implements StatusBarWidgetFactory {
             @Override
             public @Nullable
             Icon getIcon() {
-                String theme = UIUtil.isUnderDarcula() ? "dark" : "light";
+                String theme = isDarkTheme() ? "dark" : "light";
                 return IconLoader.getIcon("status-bar-icon-" + theme + "-theme.svg", LogTime.class);
             }
 
