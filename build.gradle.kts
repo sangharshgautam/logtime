@@ -7,7 +7,7 @@ plugins {
     java
     id("org.jetbrains.intellij.platform")
     id("org.jetbrains.changelog")
-    id("org.ajoberstar.grgit") version "5.2.2"
+    id("org.ajoberstar.grgit") version "5.3.3"
 }
 // --- VERSION MANAGEMENT ---
 // Derive the plugin version from the nearest git tag (e.g. tag `v0.1.1` -> `0.1.1`).
